@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Astrolabium – Kommunikationsinstrument</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Cinzel:wght@400;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#c8a84b;--gl:#e8c96a;--gd:#8a6e28;
+  --bg:#07070f;--bg2:#0f0f1c;--ivory:#f0e8d0;
+}
+body{
+  background:var(--bg);color:var(--ivory);
+  font-family:'IM Fell English',serif;
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;padding:16px;
+}
+h1{font-family:'Cinzel',serif;font-size:clamp(.95rem,2.5vw,1.35rem);
+  letter-spacing:.25em;color:var(--gold);text-align:center;margin-bottom:2px;text-transform:uppercase;}
+.sub{font-size:.65rem;color:var(--gd);letter-spacing:.18em;margin-bottom:16px;font-style:italic;text-align:center;}
+.stage{display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap;justify-content:center;width:100%;max-width:1160px;}
+.aw{position:relative;width:min(500px,92vw);height:min(500px,92vw);flex-shrink:0;}
+#sv{width:100%;height:100%;filter:drop-shadow(0 0 30px rgba(200,168,75,.25));}
+.cl{position:absolute;font-family:'Cinzel',serif;font-size:.6rem;color:var(--gd);pointer-events:none;letter-spacing:.1em;}
+.cl.N{top:1px;left:50%;transform:translateX(-50%)}
+.cl.S{bottom:1px;left:50%;transform:translateX(-50%)}
+.cl.W{left:1px;top:50%;transform:translateY(-50%)}
+.cl.O{right:1px;top:50%;transform:translateY(-50%)}
+.panel{flex:1;min-width:268px;max-width:380px;display:flex;flex-direction:column;gap:14px;}
+.card{background:var(--bg2);border:1px solid var(--gd);border-radius:3px;padding:14px;position:relative;}
+.card::after{content:'';position:absolute;inset:2px;border:1px solid rgba(200,168,75,.07);border-radius:2px;pointer-events:none;}
+.cl2{font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.2em;color:var(--gd);text-transform:uppercase;margin-bottom:9px;display:block;}
+.prow{display:flex;gap:7px;}
+#pin{flex:1;background:#08081a;border:1px solid var(--gd);color:var(--ivory);
+  font-family:'IM Fell English',serif;font-size:1rem;padding:8px 11px;border-radius:2px;outline:none;transition:border-color .2s;}
+#pin:focus{border-color:var(--gold);}
+#pin::placeholder{color:#444;font-style:italic;}
+.btn{background:var(--gd);border:1px solid var(--gold);color:var(--ivory);
+  font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.1em;
+  padding:8px 13px;cursor:pointer;border-radius:2px;text-transform:uppercase;transition:all .18s;}
+.btn:hover{background:var(--gold);color:var(--bg);}
+.dom-name{font-family:'Cinzel',serif;font-size:1rem;color:var(--gl);margin-bottom:4px;}
+.dom-dir{font-size:.7rem;color:var(--gd);margin-bottom:7px;letter-spacing:.1em;}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;}
+.tag{background:rgba(200,168,75,.1);border:1px solid var(--gd);color:var(--gold);font-size:.7rem;padding:3px 8px;border-radius:2px;font-style:italic;}
+.dom-desc{font-size:.78rem;color:#999;line-height:1.6;font-style:italic;}
+.placeholder{color:#3a3a4a;font-style:italic;font-size:.85rem;}
+#rbox{background:#060611;border:1px solid rgba(200,168,75,.12);border-radius:2px;
+  padding:12px;min-height:88px;font-size:.9rem;line-height:1.75;white-space:pre-wrap;}
+.match-info{font-size:.65rem;color:var(--gd);margin-top:6px;font-style:italic;letter-spacing:.05em;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.fi{animation:fadeUp .38s ease both;}
+.loading::after{content:'…';animation:ld 1s steps(3,end) infinite;}
+@keyframes ld{0%{content:'.'}33%{content:'..'}66%{content:'...'}100%{content:'…'}}
+</style>
+</head>
+<body>
+<h1>Astrolabium</h1>
+<p class="sub">Kognitive Linguistik · Bildschemata · 1000 Wörter · Kommunikationsinstrument</p>
+<div class="stage">
+  <div class="aw">
+    <span class="cl N">NORDEN</span><span class="cl S">SÜDEN</span>
+    <span class="cl W">WESTEN</span><span class="cl O">OSTEN</span>
+    <svg id="sv" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="bgG" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#181832"/><stop offset="100%" stop-color="#07070f"/>
+        </radialGradient>
+        <radialGradient id="spG" cx="38%" cy="33%" r="62%">
+          <stop offset="0%" stop-color="#2a2a50"/>
+          <stop offset="60%" stop-color="#13132a"/>
+          <stop offset="100%" stop-color="#08081a"/>
+        </radialGradient>
+        <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="5" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="sglow" x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="12" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <circle cx="250" cy="250" r="248" fill="url(#bgG)" stroke="#c8a84b" stroke-width="1.5"/>
+      <line x1="250" y1="14" x2="250" y2="486" stroke="#c8a84b" stroke-width=".4" opacity=".3"/>
+      <line x1="14" y1="250" x2="486" y2="250" stroke="#c8a84b" stroke-width=".4" opacity=".3"/>
+      <g id="rotG" style="transform-origin:250px 250px;transition:transform 1.3s cubic-bezier(.34,1.56,.64,1)">
+        <g id="segG"></g>
+        <circle cx="250" cy="250" r="245" fill="none" stroke="#c8a84b" stroke-width="1" opacity=".6"/>
+        <circle cx="250" cy="250" r="215" fill="none" stroke="#8a6e28" stroke-width=".7" opacity=".5"/>
+        <circle cx="250" cy="250" r="160" fill="none" stroke="#8a6e28" stroke-width=".6" opacity=".4"/>
+        <g id="schG"></g>
+        <circle cx="250" cy="250" r="110" fill="none" stroke="#c8a84b" stroke-width=".8" opacity=".4"/>
+        <g id="tickG"></g>
+      </g>
+      <circle cx="250" cy="250" r="100" fill="url(#spG)" stroke="#c8a84b" stroke-width="1.8" filter="url(#sglow)"/>
+      <ellipse cx="250" cy="250" rx="100" ry="26" fill="none" stroke="#c8a84b" stroke-width=".5" opacity=".4"/>
+      <ellipse cx="250" cy="250" rx="26" ry="100" fill="none" stroke="#c8a84b" stroke-width=".5" opacity=".4"/>
+      <ellipse cx="250" cy="250" rx="100" ry="58" fill="none" stroke="#8a6e28" stroke-width=".4" opacity=".3"/>
+      <ellipse cx="232" cy="220" rx="32" ry="20" fill="rgba(255,255,255,.04)"/>
+      <circle id="aGlow" cx="250" cy="250" r="104" fill="none" stroke="#c8a84b" stroke-width="5"
+        opacity="0" style="transition:opacity .5s" filter="url(#glow)"/>
+      <g id="needleG" style="transform-origin:250px 250px;transition:transform 1.3s cubic-bezier(.34,1.56,.64,1)">
+        <line x1="250" y1="250" x2="250" y2="116" stroke="#c8a84b" stroke-width="2.5" stroke-linecap="round" filter="url(#glow)"/>
+        <polygon points="250,105 243,124 257,124" fill="#c8a84b" filter="url(#glow)"/>
+      </g>
+      <circle cx="250" cy="250" r="7" fill="#c8a84b" filter="url(#glow)"/>
+      <circle cx="250" cy="250" r="3" fill="#07070f"/>
+      <g font-family="'Cinzel',serif" font-size="7.5" fill="rgba(200,168,75,.45)" text-anchor="middle">
+        <text x="250" y="164">VORNE</text><text x="250" y="342">HINTEN</text>
+        <text x="163" y="253">LINKS</text><text x="340" y="253">RECHTS</text>
+      </g>
+    </svg>
+  </div>
+  <div class="panel">
+    <div class="card">
+      <span class="cl2">Aktive Domäne</span>
+      <div id="domBox"><div class="placeholder">Gib ein Wort ein – das Astrolabium richtet sich aus…</div></div>
+    </div>
+    <div class="card">
+      <span class="cl2">Wort · Konzept · Erfahrung eingeben</span>
+      <div class="prow">
+        <input id="pin" type="text" placeholder="z.B. Heimweh, Sturz, Gemeinschaft…"/>
+        <button class="btn" onclick="send()">→</button>
+      </div>
+      <div style="margin-top:7px;font-size:.65rem;color:#555;font-style:italic">
+        1000 Wörter vorklassifiziert · unbekannte Wörter via KI
+      </div>
+    </div>
+    <div class="card">
+      <span class="cl2">Antwort des Instruments</span>
+      <div id="rbox"><span class="placeholder">Das Astrolabium wartet auf dein Wort…</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════════
+// DOMAIN DEFINITIONS
+// ══════════════════════════════════════════════════════════════════════════════
+const DOMAINS = [
+  {
+    id:"RAUM", dir:"N", angle:0,
+    color:"#1b3554", highlight:"#2a5280",
+    schemata:["OBEN-UNTEN","VORNE-HINTEN","LINKS-RECHTS","NAH-FERN","ZENTRUM-PERIPHERIE"],
+    desc:"Räumliche Orientierung als Urgrund aller Bedeutung. Der Körper im Raum strukturiert das Denken."
+  },
+  {
+    id:"CONTAINMENT", dir:"NO", angle:45,
+    color:"#28184a", highlight:"#3d2a6e",
+    schemata:["INNEN-AUSSEN","EINSCHLUSS","AUSSCHLUSS","GRENZE","DURCHGANG"],
+    desc:"Behälter-Schema: die Erfahrung von Drinnen und Draußen. Grundlage für Kategorien und Begrenzung."
+  },
+  {
+    id:"BEWEGUNG", dir:"O", angle:90,
+    color:"#183a28", highlight:"#245238",
+    schemata:["QUELL-WEG-ZIEL","PFAD","RICHTUNG","TRAJEKTORIE","IMPULS"],
+    desc:"Quell-Weg-Ziel: Bewegung als Grundmetapher für Zeit, Ziel und Wandel."
+  },
+  {
+    id:"GLEICHGEWICHT", dir:"SO", angle:135,
+    color:"#3a2a10", highlight:"#5a4218",
+    schemata:["BALANCE","SYMMETRIE","ACHSE","GEGENGEWICHT","WAAGE"],
+    desc:"Balance zwischen Kräften. Gleichgewicht als Basis für Harmonie, Gerechtigkeit, Spannung."
+  },
+  {
+    id:"KRAFT", dir:"S", angle:180,
+    color:"#3a1818", highlight:"#5a2020",
+    schemata:["DRUCK","BLOCKIERUNG","ANZIEHUNG","WIDERSTAND","IMPULS","AGONIST"],
+    desc:"Kraft-Dynamik: Agonist gegen Antagonist. Physische Kraft als Basis für Kausalität und Macht."
+  },
+  {
+    id:"UNITÄT", dir:"SW", angle:225,
+    color:"#1a2a3a", highlight:"#22384e",
+    schemata:["TEIL-GANZES","VERBINDUNG","TRENNUNG","SAMMLUNG","MULTIPLIKATION"],
+    desc:"Teil-Ganzes-Schema: Verbindung und Trennung. Grundlage für Gemeinschaft und Zerfall."
+  },
+  {
+    id:"IDENTITÄT", dir:"W", angle:270,
+    color:"#281a38", highlight:"#3c2550",
+    schemata:["REGION","ZYKLUS","DIREKT-PROZESS","ANPASSUNG","ABLAGERUNG"],
+    desc:"Identität als zyklischer Prozess: Schichtung, Wiederholung, Wandel. Das Selbst im Vollzug."
+  },
+  {
+    id:"EXISTENZ", dir:"NW", angle:315,
+    color:"#181828", highlight:"#252542",
+    schemata:["SEIN","WERDEN","VERGEHEN","ANWESENHEIT","ABWESENHEIT"],
+    desc:"Existenz als fundamentales Schema: Vorhanden-sein und Nicht-sein. Ontologische Metaphern."
+  }
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// LEXIKON – 1000 häufigste deutsche Wörter, zugeordnet den 8 Domänen
+// Format: wort → domänen-index (0=RAUM,1=CONTAIN,2=BEWEGUNG,3=GLEICHGEW,4=KRAFT,5=UNITÄT,6=IDENTITÄT,7=EXISTENZ)
+// ══════════════════════════════════════════════════════════════════════════════
+const LEX = {
+// ── RAUM (0) ─────────────────────────────────────────────────────────────────
+  "oben":0,"unten":0,"links":0,"rechts":0,"vorne":0,"hinten":0,"nah":0,"fern":0,
+  "hier":0,"dort":0,"da":0,"wo":0,"wohin":0,"woher":0,"hoch":0,"tief":0,
+  "weit":0,"nah":0,"ort":0,"stelle":0,"platz":0,"raum":0,"feld":0,"fläche":0,
+  "mitte":0,"rand":0,"ecke":0,"seite":0,"reihe":0,"reihen":0,"ebene":0,
+  "horizont":0,"höhe":0,"tiefe":0,"breite":0,"länge":0,"abstand":0,"nähe":0,
+  "umgebung":0,"gegend":0,"bereich":0,"gebiet":0,"zone":0,"lage":0,
+  "position":0,"richtung":0,"norden":0,"süden":0,"osten":0,"westen":0,
+  "himmel":0,"erde":0,"boden":0,"decke":0,"wand":0,"dach":0,"fenster":0,
+  "tür":0,"eingang":0,"ausgang":0,"treppe":0,"weg":0,"straße":0,"gasse":0,
+  "plätze":0,"hof":0,"garten":0,"wiese":0,"berg":0,"tal":0,"küste":0,
+  "fluss":0,"see":0,"meer":0,"land":0,"stadt":0,"dorf":0,"haus":0,
+  "zimmer":0,"raum":0,"gang":0,"keller":0,"dach":0,"turm":0,"brücke":0,
+  "tunnel":0,"kanal":0,"hafen":0,"bahnhof":0,"straßen":0,"kreuzung":0,
+  "kurve":0,"hügel":0,"abhang":0,"hang":0,"gipfel":0,"spitze":0,"grund":0,
+  "ferne":0,"weite":0,"nähe":0,"mitte":0,"zentrum":0,"peripherie":0,
+  "osten":0,"westen":0,"nach":0,"auf":0,"über":0,"unter":0,"vor":0,
+  "hinter":0,"neben":0,"zwischen":0,"innerhalb":0,"außerhalb":0,"durch":0,
+  "entlang":0,"jenseits":0,"diesseits":0,"um":0,"herum":0,"hinaus":0,
+  "hinein":0,"heraus":0,"herein":0,"hinauf":0,"hinunter":0,"herauf":0,
+  "herunter":0,"hin":0,"her":0,"fort":0,"weg":0,"zurück":0,"weiter":0,
+  "obenauf":0,"mittendrin":0,"irgendwo":0,"nirgends":0,"überall":0,
+
+// ── CONTAINMENT (1) ──────────────────────────────────────────────────────────
+  "innen":1,"außen":1,"grenze":1,"hülle":1,"schale":1,"behälter":1,
+  "kasten":1,"kiste":1,"schachtel":1,"tasche":1,"sack":1,"beutel":1,
+  "tüte":1,"flasche":1,"dose":1,"topf":1,"glas":1,"gefäß":1,
+  "box":1,"truhe":1,"schrank":1,"fach":1,"abteil":1,"compartment":1,
+  "käfig":1,"gehege":1,"zaun":1,"mauer":1,"graben":1,"einzäunung":1,
+  "gefängnis":1,"kerker":1,"zelle":1,"verlies":1,"höhle":1,"grotte":1,
+  "höhle":1,"nest":1,"loch":1,"öffnung":1,"pore":1,"spalte":1,"riss":1,
+  "tür":1,"tor":1,"klappe":1,"deckel":1,"verschluss":1,"schloss":1,
+  "siegel":1,"hülle":1,"verpackung":1,"einwickeln":1,"umschlag":1,
+  "briefumschlag":1,"koffer":1,"rucksack":1,"tasche":1,"beutel":1,
+  "drinnen":1,"draußen":1,"einschluss":1,"ausschluss":1,"einschließen":1,
+  "ausschließen":1,"begrenzen":1,"umgrenzen":1,"umfassen":1,"umhüllen":1,
+  "einrahmen":1,"umgeben":1,"umringen":1,"einkreisen":1,"umzingeln":1,
+  "abgrenzen":1,"abschirmen":1,"isolieren":1,"absondern":1,"trennen":1,
+  "heimat":1,"geborgenheit":1,"schutz":1,"sicherheit":1,"zuflucht":1,
+  "asyl":1,"zuhause":1,"wohnung":1,"appartement":1,"kammer":1,
+  "hütte":1,"unterkunft":1,"unterstand":1,"obdach":1,"dach":1,
+  "schirm":1,"schleier":1,"maske":1,"verkleidung":1,"tarnung":1,
+  "kategorie":1,"klasse":1,"gruppe":1,"gattung":1,"art":1,"sorte":1,
+  "bereich":1,"rubrik":1,"fach":1,"sparte":1,"rahmen":1,"kontext":1,
+  "umfeld":1,"milieu":1,"atmosphäre":1,"klima":1,"umwelt":1,
+  "körper":1,"haut":1,"inneres":1,"äußeres":1,"oberfläche":1,
+  "schicht":1,"kern":1,"innerei":1,"inhalt":1,"fülle":1,"leere":1,
+  "volumen":1,"kapazität":1,"speicher":1,"vorrat":1,"reservoir":1,
+  "becken":1,"behältnis":1,"wanne":1,"bottich":1,"eimer":1,
+
+// ── BEWEGUNG (2) ─────────────────────────────────────────────────────────────
+  "gehen":2,"kommen":2,"laufen":2,"rennen":2,"springen":2,"fallen":2,
+  "steigen":2,"sinken":2,"fliegen":2,"schwimmen":2,"fahren":2,"reiten":2,
+  "reisen":2,"wandern":2,"ziehen":2,"treiben":2,"strömen":2,"fließen":2,
+  "rollen":2,"gleiten":2,"rutschen":2,"kriechen":2,"schleichen":2,
+  "schreiten":2,"traben":2,"humpeln":2,"stolpern":2,"stürzen":2,
+  "aufbrechen":2,"ankommen":2,"abfahren":2,"abreisen":2,"wegfahren":2,
+  "flüchten":2,"fliehen":2,"entkommen":2,"verfolgen":2,"jagen":2,
+  "streben":2,"ziel":2,"quelle":2,"pfad":2,"route":2,"kurs":2,
+  "geschwindigkeit":2,"tempo":2,"eile":2,"langsamkeit":2,"pause":2,
+  "stillstand":2,"stopp":2,"halt":2,"rast":2,"ruhe":2,
+  "anfang":2,"beginn":2,"start":2,"ende":2,"ziel":2,"ankunft":2,
+  "abfahrt":2,"abflug":2,"landung":2,"rückkehr":2,"heimkehr":2,
+  "aufstieg":2,"abstieg":2,"absturz":2,"sprung":2,"satz":2,
+  "schritt":2,"tritt":2,"gang":2,"lauf":2,"marsch":2,"wanderung":2,
+  "reise":2,"fahrt":2,"flug":2,"zug":2,"strom":2,"welle":2,
+  "bewegung":2,"schwung":2,"impuls":2,"antrieb":2,"schwungkraft":2,
+  "momentum":2,"trajektorie":2,"bahn":2,"spur":2,"weg":2,
+  "fortschritt":2,"rückschritt":2,"wandel":2,"veränderung":2,"entwicklung":2,
+  "evolution":2,"wachstum":2,"schrumpfung":2,"ausdehnung":2,"kontraktion":2,
+  "expansion":2,"ausbreitung":2,"verbreitung":2,"diffusion":2,"streuung":2,
+  "transport":2,"transfer":2,"übertragung":2,"übergabe":2,"weitergabe":2,
+  "revolution":2,"umwälzung":2,"umlauf":2,"rotation":2,"kreisen":2,
+  "spirale":2,"kurve":2,"bogen":2,"schleife":2,"windung":2,
+  "flut":2,"welle":2,"brand":2,"ausbruch":2,"eruption":2,
+  "migration":2,"zug":2,"exodus":2,"wanderschaft":2,"nomade":2,
+  "suche":2,"streben":2,"sehnsucht":2,"drang":2,"trieb":2,
+  "abweichen":2,"verlieren":2,"irren":2,"umweg":2,"abkürzung":2,
+  "beschleunigung":2,"bremsen":2,"abbremsen":2,"beschleunigen":2,
+  "zeitverlauf":2,"kontinuität":2,"prozess":2,"ablauf":2,"verlauf":2,
+
+// ── GLEICHGEWICHT (3) ────────────────────────────────────────────────────────
+  "balance":3,"gleichgewicht":3,"harmonie":3,"symmetrie":3,"ordnung":3,
+  "ausgleich":3,"kompensation":3,"gegengewicht":3,"last":3,"schwere":3,
+  "stabilität":3,"instabilität":3,"schwanken":3,"kippen":3,"stürzen":3,
+  "halten":3,"stützen":3,"tragen":3,"ruhe":3,"stille":3,
+  "frieden":3,"eintracht":3,"übereinstimmung":3,"proportion":3,
+  "verhältnis":3,"maß":3,"mitte":3,"mittelweg":3,"kompromiss":3,
+  "gerechtigkeit":3,"fairness":3,"recht":3,"unrecht":3,"schuld":3,
+  "verantwortung":3,"pflicht":3,"verdienst":3,"lohn":3,"strafe":3,
+  "belohnung":3,"vergeltung":3,"wiedergutmachung":3,"ausgleich":3,
+  "waage":3,"gewicht":3,"schwerpunkt":3,"achse":3,"drehpunkt":3,
+  "haltung":3,"spannung":3,"entspannung":3,"anspannung":3,"lockerheit":3,
+  "rhythmus":3,"takt":3,"gleichmaß":3,"regelmäßigkeit":3,"periodizität":3,
+  "atemrhythmus":3,"herzschlag":3,"puls":3,"schwingung":3,"frequenz":3,
+  "resonanz":3,"konsonanz":3,"dissonanz":3,"harmonie":3,"melodie":3,
+  "klang":3,"ton":3,"stimmung":3,"atmosphäre":3,"gleichklang":3,
+  "gegensatz":3,"polarität":3,"dialektik":3,"spannung":3,"aufhebung":3,
+  "integration":3,"synthese":3,"vereinigung":3,"fusion":3,"verdichtung":3,
+  "verdünnung":3,"spreizung":3,"schere":3,"kluft":3,"graben":3,
+  "auseinanderdriften":3,"annäherung":3,"angleichung":3,"anpassung":3,
+  "koordination":3,"abstimmung":3,"synchronisation":3,"übereinstimmung":3,
+  "konsens":3,"einigung":3,"überwältigung":3,"übergewicht":3,
+  "kontrollverlust":3,"orientierungslosigkeit":3,"chaos":3,"unordnung":3,
+  "gleichmut":3,"gelassenheit":3,"fassung":3,"würde":3,"haltung":3,
+  "disziplin":3,"selbstkontrolle":3,"beherrschung":3,"mäßigung":3,
+  "normalzustand":3,"gleichstand":3,"patt":3,"unentschieden":3,
+
+// ── KRAFT (4) ────────────────────────────────────────────────────────────────
+  "kraft":4,"stärke":4,"schwäche":4,"macht":4,"ohnmacht":4,
+  "gewalt":4,"energie":4,"druck":4,"zug":4,"stoß":4,
+  "schlag":4,"treffer":4,"hieb":4,"tritt":4,"stich":4,
+  "widerstand":4,"hemmung":4,"blockierung":4,"hindernis":4,"schranke":4,
+  "barriere":4,"mauer":4,"wall":4,"bollwerk":4,"damm":4,
+  "anziehung":4,"abstoßung":4,"anziehungskraft":4,"gravitation":4,"schwerkraft":4,
+  "reibung":4,"spannung":4,"druck":4,"gegendruck":4,"reaktion":4,
+  "kampf":4,"krieg":4,"konflikt":4,"streit":4,"auseinandersetzung":4,
+  "sieg":4,"niederlage":4,"triumph":4,"scheitern":4,"verlieren":4,
+  "gewinnen":4,"besiegen":4,"unterwerfen":4,"beherrschen":4,"dominieren":4,
+  "überwältigen":4,"unterdrücken":4,"zwingen":4,"nötigen":4,"erpressen":4,
+  "befreien":4,"emanzipieren":4,"durchbrechen":4,"überwinden":4,"bezwingen":4,
+  "schutz":4,"verteidigung":4,"angriff":4,"offensive":4,"defensive":4,
+  "waffe":4,"schild":4,"rüstung":4,"panzer":4,"festung":4,
+  "agonist":4,"antagonist":4,"feind":4,"gegner":4,"opponent":4,
+  "verbündeter":4,"allianz":4,"bündnis":4,"pakt":4,"koalition":4,
+  "autorität":4,"hierarchie":4,"kontrolle":4,"herrschaft":4,"regime":4,
+  "einfluss":4,"wirkung":4,"wirksamkeit":4,"effekt":4,"konsequenz":4,
+  "ursache":4,"grund":4,"folge":4,"ergebnis":4,"auswirkung":4,
+  "explosion":4,"ausbruch":4,"eruption":4,"entladung":4,"reaktion":4,
+  "spannung":4,"hochspannung":4,"stress":4,"belastung":4,"druck":4,
+  "wut":4,"zorn":4,"aggression":4,"gewaltausbruch":4,"tobsucht":4,
+  "leidenschaft":4,"feuer":4,"glut":4,"hitze":4,"kälte":4,
+  "antrieb":4,"motor":4,"triebkraft":4,"dynamik":4,"schwung":4,
+  "kapital":4,"ressource":4,"potential":4,"reserve":4,"depot":4,
+  "muskeln":4,"körperkraft":4,"ausdauer":4,"leistung":4,"vermögen":4,
+  "ermächtigung":4,"delegation":4,"vollmacht":4,"mandat":4,"auftrag":4,
+
+// ── UNITÄT (5) ───────────────────────────────────────────────────────────────
+  "einheit":5,"gemeinschaft":5,"gesellschaft":5,"volk":5,"nation":5,
+  "gruppe":5,"team":5,"verein":5,"verband":5,"organisation":5,
+  "verbindung":5,"bindung":5,"beziehung":5,"verhältnis":5,"kontakt":5,
+  "zusammenhang":5,"zusammenschluss":5,"fusion":5,"vereinigung":5,"integration":5,
+  "trennung":5,"spaltung":5,"scheidung":5,"bruch":5,"riss":5,
+  "verlust":5,"einsamkeit":5,"isolation":5,"abspaltung":5,"ausgrenzung":5,
+  "zusammengehörigkeit":5,"solidarität":5,"zusammenhalt":5,"kohäsion":5,
+  "ganzheit":5,"vollständigkeit":5,"integrität":5,"einheitlichkeit":5,
+  "teil":5,"glied":5,"mitglied":5,"zugehörigkeit":5,"teilnahme":5,
+  "teilhabe":5,"beteiligung":5,"anteil":5,"anteilnahme":5,"empathie":5,
+  "familie":5,"verwandtschaft":5,"freundschaft":5,"kameradschaft":5,"bruderschaft":5,
+  "schwesternschaft":5,"partnerschaft":5,"ehe":5,"liebe":5,"zuneigung":5,
+  "verbundenheit":5,"nähe":5,"intimität":5,"vertrauen":5,"treue":5,
+  "loyalität":5,"verrat":5,"feindschaft":5,"entfremdung":5,"distanz":5,
+  "netz":5,"netzwerk":5,"geflecht":5,"gewebe":5,"gefüge":5,
+  "struktur":5,"system":5,"organismus":5,"körper":5,"gliedmaßen":5,
+  "organ":5,"zelle":5,"gewebe":5,"zusammensetzung":5,"aufbau":5,
+  "menge":5,"vielzahl":5,"anzahl":5,"summe":5,"gesamtheit":5,
+  "alle":5,"niemand":5,"jeder":5,"keiner":5,"wir":5,
+  "uns":5,"miteinander":5,"füreinander":5,"gegenseitig":5,"gemeinsam":5,
+  "kollektiv":5,"kommunität":5,"bürgerschaft":5,"nachbarschaft":5,"gemeinde":5,
+  "plural":5,"vielfalt":5,"heterogenität":5,"diversität":5,"differenz":5,
+  "ähnlichkeit":5,"gleichheit":5,"identität":5,"konformität":5,"uniformität":5,
+  "heirat":5,"hochzeit":5,"scheidung":5,"partnerschaft":5,"paar":5,
+  "kollaboration":5,"kooperation":5,"zusammenarbeit":5,"koexistenz":5,
+  "konflikt":5,"spaltung":5,"zerfall":5,"auflösung":5,"zerstörung":5,
+  "aufbau":5,"konstruktion":5,"schöpfung":5,"generation":5,"fortpflanzung":5,
+
+// ── IDENTITÄT (6) ────────────────────────────────────────────────────────────
+  "ich":6,"selbst":6,"seele":6,"geist":6,"person":6,
+  "charakter":6,"persönlichkeit":6,"wesen":6,"natur":6,"art":6,
+  "herkunft":6,"ursprung":6,"wurzel":6,"abstammung":6,"erbe":6,
+  "tradition":6,"brauch":6,"gewohnheit":6,"ritual":6,"zeremonie":6,
+  "erinnerung":6,"gedächtnis":6,"vergessen":6,"vergangenheit":6,"kindheit":6,
+  "jugend":6,"alter":6,"biographie":6,"lebensgeschichte":6,"schicksal":6,
+  "name":6,"bezeichnung":6,"titel":6,"rolle":6,"funktion":6,
+  "beruf":6,"berufung":6,"aufgabe":6,"mission":6,"zweck":6,
+  "spiegel":6,"reflexion":6,"selbstbild":6,"fremdwahrnehmung":6,"ruf":6,
+  "ansehen":6,"würde":6,"stolz":6,"scham":6,"schuld":6,
+  "kontinuität":6,"wandel":6,"transformation":6,"verwandlung":6,"metamorphose":6,
+  "entwicklung":6,"reifung":6,"prägung":6,"formung":6,"bildung":6,
+  "erziehung":6,"sozialisation":6,"kultur":6,"zivilisation":6,"tradition":6,
+  "glaube":6,"überzeugung":6,"wert":6,"normen":6,"prinzip":6,
+  "moral":6,"ethik":6,"gewissen":6,"integrität":6,"konsistenz":6,
+  "sprache":6,"ausdruck":6,"stil":6,"stimme":6,"ton":6,
+  "körper":6,"erscheinung":6,"aussehen":6,"gestalt":6,"silhouette":6,
+  "haltung":6,"geste":6,"mimik":6,"blick":6,"lächeln":6,
+  "nationalität":6,"staatsbürgerschaft":6,"zugehörigkeit":6,"heimat":6,"vertrieben":6,
+  "zyklus":6,"wiederholung":6,"muster":6,"rhythmus":6,"gewohnheit":6,
+  "region":6,"herkunftsgebiet":6,"dialekt":6,"akzent":6,"mundart":6,
+  "prägung":6,"abdruck":6,"spur":6,"narbe":6,"wunde":6,
+  "einstellung":6,"haltung":6,"mentalität":6,"weltanschauung":6,"ideologie":6,
+  "glaubenssystem":6,"dogma":6,"überzeugungen":6,"werte":6,"prinzipien":6,
+  "werden":6,"sein":6,"bleiben":6,"vergehen":6,"wandeln":6,
+  "wachsen":6,"reifen":6,"altern":6,"vergessen":6,"erinnern":6,
+
+// ── EXISTENZ (7) ─────────────────────────────────────────────────────────────
+  "sein":7,"existenz":7,"dasein":7,"wirklichkeit":7,"realität":7,
+  "wahrheit":7,"wahrhaftigkeit":7,"echtheit":7,"authentizität":7,
+  "leben":7,"tod":7,"sterben":7,"geburt":7,"entstehung":7,
+  "vergänglichkeit":7,"sterblichkeit":7,"unsterblichkeit":7,"ewigkeit":7,
+  "moment":7,"augenblick":7,"jetzt":7,"gegenwart":7,"präsenz":7,
+  "anwesenheit":7,"abwesenheit":7,"fehlen":7,"mangel":7,"lücke":7,
+  "nichts":7,"leere":7,"stille":7,"schweigen":7,"einsamkeit":7,
+  "sinn":7,"bedeutung":7,"zweck":7,"ziel":7,"wert":7,
+  "wunder":7,"geheimnis":7,"rätsel":7,"mystik":7,"spiritualität":7,
+  "gott":7,"göttlich":7,"heilig":7,"sakral":7,"profan":7,
+  "transzendenz":7,"immanenz":7,"jenseits":7,"diesseits":7,"zwischen":7,
+  "schicksal":7,"bestimmung":7,"zufall":7,"notwendigkeit":7,"freiheit":7,
+  "wille":7,"entscheidung":7,"wahl":7,"möglichkeit":7,"notwendigkeit":7,
+  "hoffnung":7,"verzweiflung":7,"angst":7,"mut":7,"tapferkeit":7,
+  "trauer":7,"freude":7,"glück":7,"leid":7,"schmerz":7,
+  "liebe":7,"hass":7,"gleichgültigkeit":7,"mitgefühl":7,"einsamkeit":7,
+  "werden":7,"vergehen":7,"erscheinen":7,"verschwinden":7,"auftauchen":7,
+  "entfalten":7,"verblühen":7,"welken":7,"blühen":7,"gedeihen":7,
+  "anfang":7,"ende":7,"ursprung":7,"ziel":7,"vollendung":7,
+  "geist":7,"bewusstsein":7,"unterbewusstsein":7,"seele":7,"selbst":7,
+  "traum":7,"vision":7,"halluzination":7,"erscheinung":7,"phantom":7,
+  "wirklichkeit":7,"illusion":7,"täuschung":7,"schein":7,"wahrheit":7,
+  "zeit":7,"raum":7,"unendlichkeit":7,"begrenztheit":7,"endlichkeit":7,
+  "natur":7,"kosmos":7,"universum":7,"welt":7,"erde":7,
+  "dunkelheit":7,"licht":7,"finsternis":7,"hell":7,"dunkel":7,
+  "schlaf":7,"erwachen":7,"bewusstlosigkeit":7,"ohnmacht":7,"trance":7,
+  "sterbens":7,"verfall":7,"zerfall":7,"verwandlung":7,"auflösung":7,
+  "wiederkehr":7,"auferstehung":7,"erneuerung":7,"renaissance":7,"neugeburt":7,
+
+// Häufige Funktionswörter - pragmatisch zugeordnet
+  "der":0,"die":0,"das":0,"ein":7,"eine":7,"des":6,"dem":6,"den":6,
+  "und":5,"oder":3,"aber":4,"wenn":2,"weil":4,"obwohl":3,
+  "als":3,"wie":6,"so":0,"sehr":4,"mehr":2,"noch":2,
+  "schon":7,"erst":7,"nur":3,"auch":5,"doch":4,"ja":7,"nein":7,
+  "nicht":7,"kein":7,"nichts":7,"alles":5,"alle":5,"jeder":5,
+  "man":6,"wir":5,"ich":6,"du":6,"er":6,"sie":6,"es":7,
+  "mein":6,"dein":6,"sein":7,"ihr":6,"unser":5,
+  "mit":5,"ohne":5,"für":5,"gegen":4,"von":0,"zu":2,"an":0,
+  "in":1,"aus":1,"bei":0,"nach":2,"seit":7,"bis":2,"ab":2,
+  "über":0,"unter":0,"zwischen":0,"neben":0,"hinter":0,"vor":0,
+  "um":2,"durch":2,"entlang":2,"wegen":4,"trotz":4,
+  "haben":7,"sein":7,"werden":7,"können":4,"müssen":4,"sollen":6,
+  "wollen":4,"dürfen":1,"mögen":7,"lassen":3,
+  "machen":4,"gehen":2,"kommen":2,"sehen":0,"hören":0,
+  "sagen":6,"denken":6,"wissen":6,"glauben":6,"fühlen":7,
+  "leben":7,"sterben":7,"arbeiten":4,"spielen":3,"lernen":6,
+  "geben":5,"nehmen":4,"bringen":2,"holen":2,"legen":0,
+  "stellen":0,"setzen":0,"stehen":0,"liegen":0,"sitzen":0,
+  "gut":3,"schlecht":3,"groß":0,"klein":0,"viel":5,
+  "wenig":5,"lang":2,"kurz":2,"neu":7,"alt":7,
+  "jung":7,"alt":7,"schön":3,"hässlich":3,"schnell":2,"langsam":2,
+  "stark":4,"schwach":4,"hell":0,"dunkel":0,"warm":4,"kalt":4,
+  "hoch":0,"niedrig":0,"breit":0,"schmal":0,"dick":1,"dünn":1,
+  "laut":4,"leise":3,"hart":4,"weich":3,"nass":1,"trocken":1,
+  "wahr":7,"falsch":7,"richtig":3,"falsch":3,"frei":7,"gefangen":1,
+  "offen":1,"geschlossen":1,"leer":7,"voll":1,"sauber":3,"schmutzig":3,
+  "ganz":5,"halb":3,"voll":5,"leer":7,"gleich":3,"verschieden":6,
+  "ähnlich":6,"anders":6,"eigen":6,"fremd":6,"nah":0,"entfernt":0,
+  "sicher":1,"gefährlich":4,"möglich":7,"unmöglich":4,"nötig":4,
+  "wichtig":4,"unwichtig":3,"bekannt":6,"unbekannt":7,
+  "einfach":3,"schwierig":4,"leicht":3,"schwer":4,"klar":0,"unklar":7,
+  "früh":2,"spät":2,"schnell":2,"sofort":2,"bald":2,"dann":2,
+  "noch":2,"immer":7,"nie":7,"oft":6,"manchmal":6,"selten":6,
+  "heute":7,"gestern":7,"morgen":7,"jetzt":7,"damals":7,
+  "hier":0,"dort":0,"irgendwo":0,"überall":0,"nirgends":7,
+  "so":0,"wie":3,"dass":5,"ob":7,"wann":7,
+  "warum":4,"weshalb":4,"wozu":2,"womit":4,"wodurch":2,
+  "mensch":6,"kind":6,"frau":6,"mann":6,"mädchen":6,"junge":6,
+  "mutter":5,"vater":5,"eltern":5,"geschwister":5,"bruder":5,"schwester":5,
+  "freund":5,"feind":4,"nachbar":5,"kollege":5,"chef":4,"schüler":6,
+  "lehrer":6,"arzt":4,"polizist":4,"soldat":4,"bauer":5,
+  "tier":7,"hund":5,"katze":5,"pferd":2,"vogel":2,"fisch":2,
+  "baum":7,"blume":7,"pflanze":7,"gras":7,"wald":0,"wiese":0,
+  "wasser":2,"feuer":4,"erde":0,"luft":0,"wind":2,"regen":2,
+  "schnee":3,"eis":3,"frost":4,"wärme":4,"hitze":4,"kälte":4,
+  "licht":0,"schatten":0,"farbe":6,"rot":4,"blau":3,"grün":7,"gelb":0,
+  "schwarz":7,"weiß":3,"grau":3,"hell":0,"dunkel":0,
+  "stimme":6,"laut":4,"ton":3,"klang":3,"musik":3,"lied":3,
+  "wort":6,"satz":6,"sprache":6,"text":6,"buch":6,"brief":5,
+  "frage":6,"antwort":6,"gespräch":5,"rede":4,"schweigen":7,
+  "gedanke":6,"idee":6,"plan":2,"traum":7,"wunsch":2,"hoffnung":7,
+  "angst":4,"mut":4,"freude":7,"trauer":7,"liebe":7,"hass":4,
+  "glück":7,"unglück":7,"schmerz":4,"lust":7,"genuss":7,
+  "arbeit":4,"aufgabe":4,"pflicht":6,"recht":6,"gesetz":4,"regel":6,
+  "geld":4,"preis":4,"wert":7,"kosten":4,"lohn":4,"strafe":4,
+  "essen":1,"trinken":1,"schlafen":7,"aufwachen":7,"atmen":7,
+  "sehen":0,"hören":0,"riechen":1,"schmecken":1,"fühlen":7,
+  "hand":4,"fuß":2,"kopf":6,"herz":7,"auge":0,"ohr":0,
+  "mund":6,"nase":1,"arm":4,"bein":2,"rücken":0,"bauch":1,
+  "blut":4,"knochen":4,"haut":1,"haar":6,"atem":7,"seele":7,
+  "gebäude":0,"schule":6,"kirche":6,"krankenhaus":4,"gefängnis":1,
+  "fabrik":4,"büro":5,"laden":1,"markt":5,"theater":3,"museum":6,
+  "auto":2,"bus":2,"bahn":2,"flugzeug":2,"schiff":2,"fahrrad":2,
+  "straße":0,"brücke":0,"bahnhof":2,"flughafen":2,"hafen":2,
+  "telefon":5,"computer":4,"maschine":4,"werkzeug":4,"waffe":4,
+  "bett":7,"tisch":0,"stuhl":0,"sofa":3,"küche":1,"bad":1,
+  "kleidung":1,"hemd":1,"hose":1,"schuhe":2,"mantel":1,"mütze":1,
+  "nahrung":1,"brot":1,"fleisch":1,"gemüse":1,"obst":7,"wein":7,
+  "sonne":0,"mond":7,"stern":0,"planet":0,"galaxie":7,"universum":7,
+  "berg":0,"tal":0,"see":0,"ozean":2,"wüste":0,"dschungel":7,
+  "gold":4,"silber":3,"eisen":4,"holz":7,"stein":0,"sand":0,
+  "zahlen":4,"mathematik":3,"wissenschaft":6,"technik":4,"kunst":3,
+  "religion":7,"philosophie":6,"politik":4,"wirtschaft":4,"recht":6,
+  "krieg":4,"frieden":3,"revolution":2,"evolution":2,"demokratie":5,
+  "gesundheit":3,"krankheit":4,"heilung":3,"medizin":4,"tod":7,
+  "vergangenheit":7,"gegenwart":7,"zukunft":2,"ewigkeit":7,
+  "idee":6,"konzept":6,"theorie":6,"praxis":4,"erfahrung":7,
+  "bild":6,"symbol":6,"zeichen":6,"bedeutung":6,"metapher":6,
+  "geschichte":6,"mythos":6,"legende":6,"märchen":6,"traum":7,
+};
+
+// Normalisierung: lowercase, ohne Umlaute-Varianten bereinigt
+function normalize(w) {
+  return w.toLowerCase().trim()
+    .replace(/ä/g,'ä').replace(/ö/g,'ö').replace(/ü/g,'ü');
+}
+
+// ── SVG BUILD ─────────────────────────────────────────────────────────────────
+const CX=250,CY=250,NS="http://www.w3.org/2000/svg";
+function polar(r,deg){const a=(deg-90)*Math.PI/180;return[CX+r*Math.cos(a),CY+r*Math.sin(a)];}
+function arc(r1,r2,a1,a2){
+  const[x1,y1]=polar(r2,a1),[x2,y2]=polar(r2,a2);
+  const[x3,y3]=polar(r1,a2),[x4,y4]=polar(r1,a1);
+  const lg=(a2-a1)>180?1:0;
+  return`M${x1},${y1} A${r2},${r2} 0 ${lg},1 ${x2},${y2} L${x3},${y3} A${r1},${r1} 0 ${lg},0 ${x4},${y4} Z`;
+}
+function el(tag,attrs){
+  const e=document.createElementNS(NS,tag);
+  Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));
+  return e;
+}
+
+function buildSVG(){
+  const segG=document.getElementById('segG');
+  const schG=document.getElementById('schG');
+  const tickG=document.getElementById('tickG');
+  DOMAINS.forEach((dom,i)=>{
+    const a1=i*45-22.5,a2=a1+45,amid=i*45;
+    const p=el('path',{d:arc(215,245,a1,a2),fill:dom.color,stroke:'#c8a84b','stroke-width':'0.8',opacity:'0.9'});
+    p.dataset.idx=i; p.style.cursor='pointer';
+    p.addEventListener('click',()=>activateDomain(i,true));
+    segG.appendChild(p);
+    const[lx,ly]=polar(230,amid);
+    const lt=el('text',{x:lx,y:ly,'text-anchor':'middle','dominant-baseline':'central',
+      'font-size':'7.5','font-family':"'Cinzel',serif",fill:'#c8a84b',
+      transform:`rotate(${amid},${lx},${ly})`,'pointer-events':'none'});
+    lt.textContent=dom.id; segG.appendChild(lt);
+    dom.schemata.slice(0,2).forEach((s,si)=>{
+      const sa=a1+8+si*16;const[sx,sy]=polar(186,sa);
+      const st=el('text',{x:sx,y:sy,'text-anchor':'middle','dominant-baseline':'central',
+        'font-size':'5','font-family':'serif',fill:'#6a5218',
+        transform:`rotate(${sa+90},${sx},${sy})`,'pointer-events':'none'});
+      st.textContent=s; schG.appendChild(st);
+    });
+    for(let t=0;t<=8;t++){
+      const ta=a1+t*(45/8);
+      const[tx1,ty1]=polar(110,ta),[tx2,ty2]=polar(t===0?107:113,ta);
+      const tk=el('line',{x1:tx1,y1:ty1,x2:tx2,y2:ty2,
+        stroke:t===0?'#c8a84b':'#2a2a18','stroke-width':t===0?'1.2':'.5'});
+      tickG.appendChild(tk);
+    }
+    const[dx,dy]=polar(133,amid);
+    const dT=el('text',{x:dx,y:dy,'text-anchor':'middle','dominant-baseline':'central',
+      'font-size':'8','font-family':"'Cinzel',serif",fill:'rgba(200,168,75,.45)',
+      'pointer-events':'none'});
+    dT.textContent=dom.dir; tickG.appendChild(dT);
+  });
+}
+
+// ── ACTIVATE ──────────────────────────────────────────────────────────────────
+function activateDomain(idx){
+  const dom=DOMAINS[idx];
+  document.getElementById('needleG').style.transform=`rotate(${dom.angle}deg)`;
+  document.getElementById('rotG').style.transform=`rotate(${-dom.angle*0.32}deg)`;
+  const ag=document.getElementById('aGlow');
+  ag.style.stroke=dom.highlight; ag.style.opacity='1';
+  setTimeout(()=>ag.style.opacity='0',900);
+  document.querySelectorAll('#segG path').forEach((p,i)=>{
+    p.setAttribute('fill',i===idx?dom.highlight:DOMAINS[i].color);
+    p.setAttribute('opacity',i===idx?'1':'0.75');
+  });
+  const tags=dom.schemata.map(s=>`<span class="tag">${s}</span>`).join('');
+  document.getElementById('domBox').innerHTML=`
+    <div class="dom-name fi">${dom.id}</div>
+    <div class="dom-dir fi">↗ ${dom.dir} &nbsp;·&nbsp; ${dom.angle}°</div>
+    <div class="tags fi">${tags}</div>
+    <div class="dom-desc fi">${dom.desc}</div>`;
+}
+
+// ── SEND ──────────────────────────────────────────────────────────────────────
+async function send(){
+  const raw=document.getElementById('pin').value.trim();
+  if(!raw) return;
+  const word=normalize(raw);
+  const rbox=document.getElementById('rbox');
+  rbox.innerHTML='<span class="loading">Das Astrolabium dreht sich</span>';
+
+  // 1) Lookup im Lexikon
+  let idx=LEX[word];
+  let matchType='';
+  if(idx===undefined){
+    // Stemming: try without common suffixes
+    const stems=[
+      word.replace(/en$/,''),word.replace(/ung$/,''),word.replace(/heit$/,''),
+      word.replace(/keit$/,''),word.replace(/schaft$/,''),word.replace(/lich$/,''),
+      word.replace(/ig$/,''),word.replace(/isch$/,''),word.replace(/ste$/,''),
+      word.replace(/er$/,''),word.replace(/es$/,''),word.replace(/em$/,''),
+      word.replace(/t$/,''),word.replace(/te$/,''),word.replace(/ten$/,''),
+    ];
+    for(const s of stems){
+      if(LEX[s]!==undefined){idx=LEX[s];matchType=` (→ ${s})`;break;}
+    }
+  } else {
+    matchType=' (direkter Treffer)';
+  }
+
+  if(idx!==undefined){
+    // Known word – activate immediately, then get poetic response
+    activateDomain(idx);
+    const dom=DOMAINS[idx];
+    document.getElementById('domBox').querySelector('.dom-dir').insertAdjacentHTML('afterend',
+      `<div class="match-info fi">Lexikon${matchType}</div>`);
+    // Poetic response via API
+    const sys=buildSystem(dom,raw);
+    try{
+      const r=await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,
+          system:sys,messages:[{role:"user",content:raw}]})
+      });
+      const d=await r.json();
+      rbox.textContent=d.content?.map(c=>c.text||'').join('')||'(keine Antwort)';
+    }catch(e){rbox.innerHTML='<span style="color:#844">Verbindungsfehler.</span>';}
+  } else {
+    // Unknown word: classify via API first
+    document.getElementById('domBox').innerHTML='<div class="placeholder fi">Unbekanntes Wort – KI klassifiziert…</div>';
+    const domList=DOMAINS.map(d=>`${d.id}: ${d.schemata.join(', ')}`).join('\n');
+    try{
+      const cr=await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:20,
+          messages:[{role:"user",content:
+`Klassifiziere das folgende Wort einer der 8 kognitiv-linguistischen Domänen zu.\nDomänen:\n${domList}\nAntworte NUR mit dem Domänen-ID (z.B. KRAFT).\nWort: "${raw}"`}]})
+      });
+      const cd=await cr.json();
+      const domId=(cd.content?.[0]?.text||'').trim().toUpperCase().replace(/[^A-ZÄÖÜ]/g,'');
+      const fi=DOMAINS.findIndex(d=>d.id===domId);
+      idx=fi>=0?fi:0;
+      activateDomain(idx);
+      const dom=DOMAINS[idx];
+      document.getElementById('domBox').querySelector('.dom-dir').insertAdjacentHTML('afterend',
+        `<div class="match-info fi">KI-Klassifikation</div>`);
+      const r2=await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,
+          system:buildSystem(dom,raw),messages:[{role:"user",content:raw}]})
+      });
+      const pd=await r2.json();
+      rbox.textContent=pd.content?.map(c=>c.text||'').join('')||'(keine Antwort)';
+    }catch(e){rbox.innerHTML='<span style="color:#844">Verbindungsfehler.</span>';}
+  }
+}
+
+function buildSystem(dom,word){
+  return`Du bist ein lebendes Astrolabium der kognitiven Linguistik – ein Kommunikationsinstrument, das verkörperte Erfahrung in Sprache verwandelt.
+
+Das Instrument ist ausgerichtet auf:
+Domäne: ${dom.id} · Himmelsrichtung: ${dom.dir}
+Bildschemata: ${dom.schemata.join(', ')}
+${dom.desc}
+
+Antworte auf Deutsch in 4–6 Sätzen.
+Poetisch, bildhaft, präzise – im Geist der kognitiven Linguistik (embodied cognition).
+Zeige, wie das eingegebene Wort »${word}« in der Domäne ${dom.id} verkörpert ist.
+Kein Aufzählungsformat. Sprich direkt.`;
+}
+
+document.getElementById('pin').addEventListener('keydown',e=>{if(e.key==='Enter')send();});
+buildSVG();
+</script>
+</body>
+</html>
