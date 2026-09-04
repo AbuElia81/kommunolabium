@@ -507,6 +507,31 @@ function normalize(w) {
     .replace(/ä/g,'ä').replace(/ö/g,'ö').replace(/ü/g,'ü');
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// VERMITTLER – hält den API-Schlüssel serverseitig. Einrichtung: proxy/README.md
+// ══════════════════════════════════════════════════════════════════════════════
+const PROXY="PROXY_URL_HIER_EINSETZEN";
+
+async function vermittler(pfad,daten){
+  if(PROXY.startsWith("PROXY_URL"))
+    throw new Error("Kein Vermittler eingetragen – siehe proxy/README.md.");
+  const r=await fetch(PROXY+pfad,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(daten)
+  });
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.fehler||`Der Vermittler antwortet mit ${r.status}.`);
+  return d;
+}
+
+function zeigeFehler(box,e){
+  box.textContent='';
+  const s=document.createElement('span');
+  s.style.color='#844';
+  s.textContent=e.message||"Verbindungsfehler.";
+  box.appendChild(s);
+}
+
 // ── SVG BUILD ─────────────────────────────────────────────────────────────────
 const CX=250,CY=250,NS="http://www.w3.org/2000/svg";
 function polar(r,deg){const a=(deg-90)*Math.PI/180;return[CX+r*Math.cos(a),CY+r*Math.sin(a)];}
@@ -607,64 +632,36 @@ async function send(){
   }
 
   if(idx!==undefined){
-    // Known word – activate immediately, then get poetic response
+    // Bekanntes Wort – sofort ausrichten, dann die Deutung holen
     activateDomain(idx);
     const dom=DOMAINS[idx];
     document.getElementById('domBox').querySelector('.dom-dir').insertAdjacentHTML('afterend',
       `<div class="match-info fi">Lexikon${matchType}</div>`);
-    // Poetic response via API
-    const sys=buildSystem(dom,raw);
-    try{
-      const r=await fetch("https://api.anthropic.com/v1/messages",{
-        method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,
-          system:sys,messages:[{role:"user",content:raw}]})
-      });
-      const d=await r.json();
-      rbox.textContent=d.content?.map(c=>c.text||'').join('')||'(keine Antwort)';
-    }catch(e){rbox.innerHTML='<span style="color:#844">Verbindungsfehler.</span>';}
+    await holeDeutung(dom,raw,rbox);
   } else {
-    // Unknown word: classify via API first
+    // Unbekanntes Wort: erst über den Vermittler klassifizieren
     document.getElementById('domBox').innerHTML='<div class="placeholder fi">Unbekanntes Wort – KI klassifiziert…</div>';
-    const domList=DOMAINS.map(d=>`${d.id}: ${d.schemata.join(', ')}`).join('\n');
     try{
-      const cr=await fetch("https://api.anthropic.com/v1/messages",{
-        method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:20,
-          messages:[{role:"user",content:
-`Klassifiziere das folgende Wort einer der 8 kognitiv-linguistischen Domänen zu.\nDomänen:\n${domList}\nAntworte NUR mit dem Domänen-ID (z.B. KRAFT).\nWort: "${raw}"`}]})
-      });
-      const cd=await cr.json();
-      const domId=(cd.content?.[0]?.text||'').trim().toUpperCase().replace(/[^A-ZÄÖÜ]/g,'');
-      const fi=DOMAINS.findIndex(d=>d.id===domId);
+      const kd=await vermittler('/klassifiziere',{instrument:'astrolabium',wort:raw});
+      const fi=DOMAINS.findIndex(d=>d.id===kd.domaene);
       idx=fi>=0?fi:0;
       activateDomain(idx);
       const dom=DOMAINS[idx];
       document.getElementById('domBox').querySelector('.dom-dir').insertAdjacentHTML('afterend',
         `<div class="match-info fi">KI-Klassifikation</div>`);
-      const r2=await fetch("https://api.anthropic.com/v1/messages",{
-        method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,
-          system:buildSystem(dom,raw),messages:[{role:"user",content:raw}]})
-      });
-      const pd=await r2.json();
-      rbox.textContent=pd.content?.map(c=>c.text||'').join('')||'(keine Antwort)';
-    }catch(e){rbox.innerHTML='<span style="color:#844">Verbindungsfehler.</span>';}
+      await holeDeutung(dom,raw,rbox);
+    }catch(e){
+      document.getElementById('domBox').innerHTML='<div class="placeholder fi">Nicht ausgerichtet.</div>';
+      zeigeFehler(rbox,e);
+    }
   }
 }
 
-function buildSystem(dom,word){
-  return`Du bist ein lebendes Astrolabium der kognitiven Linguistik – ein Kommunikationsinstrument, das verkörperte Erfahrung in Sprache verwandelt.
-
-Das Instrument ist ausgerichtet auf:
-Domäne: ${dom.id} · Himmelsrichtung: ${dom.dir}
-Bildschemata: ${dom.schemata.join(', ')}
-${dom.desc}
-
-Antworte auf Deutsch in 4–6 Sätzen.
-Poetisch, bildhaft, präzise – im Geist der kognitiven Linguistik (embodied cognition).
-Zeige, wie das eingegebene Wort »${word}« in der Domäne ${dom.id} verkörpert ist.
-Kein Aufzählungsformat. Sprich direkt.`;
+async function holeDeutung(dom,wort,rbox){
+  try{
+    const d=await vermittler('/deute',{instrument:'astrolabium',wort:wort,domaene:dom.id,sprache:'de'});
+    rbox.textContent=d.text||'(keine Antwort)';
+  }catch(e){zeigeFehler(rbox,e);}
 }
 
 document.getElementById('pin').addEventListener('keydown',e=>{if(e.key==='Enter')send();});

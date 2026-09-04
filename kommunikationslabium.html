@@ -214,6 +214,31 @@ const LANGS = [
 let currentLang = LANGS[0];
 
 // ══════════════════════════════════════════════════════════════════════════════
+// VERMITTLER – hält den API-Schlüssel serverseitig. Einrichtung: proxy/README.md
+// ══════════════════════════════════════════════════════════════════════════════
+const PROXY="PROXY_URL_HIER_EINSETZEN";
+
+async function vermittler(pfad,daten){
+  if(PROXY.startsWith("PROXY_URL"))
+    throw new Error("Kein Vermittler eingetragen – siehe proxy/README.md.");
+  const r=await fetch(PROXY+pfad,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(daten)
+  });
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.fehler||`Der Vermittler antwortet mit ${r.status}.`);
+  return d;
+}
+
+function zeigeFehler(box,e){
+  box.textContent='';
+  const s=document.createElement('span');
+  s.style.color='#844';
+  s.textContent=e.message||"Verbindungsfehler.";
+  box.appendChild(s);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // DOMAINS  (CONTAINMENT → GRENZE, UNITÄT → EINHEIT·MULTIPLIZITÄT)
 // ══════════════════════════════════════════════════════════════════════════════
 const DOMAINS = [
@@ -681,49 +706,31 @@ async function send(){
       .insertAdjacentHTML('afterend',`<div class="match-info fi">Lexikon${matchType}</div>`);
     await getResponse(dom,raw,rbox);
   } else {
-    // AI classification
+    // KI-Klassifikation über den Vermittler
     document.getElementById('domBox').innerHTML='<div class="placeholder fi">KI klassifiziert…</div>';
-    const domList=DOMAINS.map(d=>`${d.id}: ${d.schemata.join(', ')}`).join('\n');
     try{
-      const cr=await fetch("https://api.anthropic.com/v1/messages",{
-        method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:20,
-          messages:[{role:"user",content:
-`Klassifiziere das Wort einer der 8 Domänen zu.\nDomänen:\n${domList}\nAntworte NUR mit dem Domänen-ID (z.B. KRAFT).\nWort: "${raw}"`}]})
-      });
-      const cd=await cr.json();
-      const domId=(cd.content?.[0]?.text||'').trim().toUpperCase().replace(/[^A-ZÄÖÜ·]/g,'');
-      const fi=DOMAINS.findIndex(d=>d.id===domId||domId.startsWith(d.id.split('·')[0]));
+      const kd=await vermittler('/klassifiziere',{instrument:'kommunikationslabium',wort:raw});
+      const fi=DOMAINS.findIndex(d=>d.id===kd.domaene);
       idx=fi>=0?fi:0;
       const dom=activateDomain(idx);
       document.getElementById('domBox').querySelector('.dom-dir')
         .insertAdjacentHTML('afterend',`<div class="match-info fi">KI-Klassifikation</div>`);
       await getResponse(dom,raw,rbox);
-    }catch(e){rbox.innerHTML='<span style="color:#844">Verbindungsfehler.</span>';}
+    }catch(e){
+      document.getElementById('domBox').innerHTML='<div class="placeholder fi">Nicht ausgerichtet.</div>';
+      zeigeFehler(rbox,e);
+    }
   }
 }
 
 async function getResponse(dom,word,rbox){
-  const lang=currentLang;
-  const sys=`Du bist das Kommunikationslabium – ein lebendes Instrument der kognitiven Linguistik.
-Das Instrument ist ausgerichtet auf:
-Domäne: ${dom.id} · Himmelsrichtung: ${dom.dir}
-Bildschemata: ${dom.schemata.join(', ')}
-${dom.desc}
-
-Antworte auf ${lang.systemLang} in 4–6 Sätzen.
-Poetisch, bildhaft, präzise – im Geist der kognitiven Linguistik (embodied cognition).
-Zeige, wie das eingegebene Wort »${word}« in der Domäne ${dom.id} verkörpert ist.
-Kein Aufzählungsformat. Sprich direkt.`;
   try{
-    const r=await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,
-        system:sys,messages:[{role:"user",content:word}]})
+    const d=await vermittler('/deute',{
+      instrument:'kommunikationslabium',
+      wort:word, domaene:dom.id, sprache:currentLang.code
     });
-    const d=await r.json();
-    rbox.textContent=d.content?.map(c=>c.text||'').join('')||'–';
-  }catch(e){rbox.innerHTML='<span style="color:#844">Verbindungsfehler.</span>';}
+    rbox.textContent=d.text||'–';
+  }catch(e){zeigeFehler(rbox,e);}
 }
 
 document.getElementById('pin').addEventListener('keydown',e=>{if(e.key==='Enter')send();});
