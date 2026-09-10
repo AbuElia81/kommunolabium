@@ -63,6 +63,24 @@ ein Text im Antwortfeld erscheinen.
 
 ---
 
+## Schale und Pol
+
+`/deute` nimmt zwei weitere Felder entgegen, beide freiwillig:
+
+| Feld     | Erlaubte Werte                              | Voreinstellung |
+| -------- | ------------------------------------------- | -------------- |
+| `schale` | `Inhalt`, `Epistemisch`, `Sprechakt`        | `Inhalt`       |
+| `pol`    | `Darstellung`, `Ausdruck`, `Appell`         | `Darstellung`  |
+
+Die Sprachkugel schickt beide mit; die beiden älteren Seiten kennen sie nicht und
+bekommen die Voreinstellung — ihre Antworten bleiben also unverändert.
+
+Wichtig für die Sicherheit: Der Aufrufer schickt **nur eine Kennung aus dieser
+Liste**, kein Stück Prompt. Die zugehörigen Anweisungen stehen in `worker.js`.
+Ein unbekannter Wert wird mit 400 abgewiesen, statt stillschweigend auf die
+Voreinstellung zurückzufallen — sonst könnte ein Tippfehler unbemerkt die falsche
+Ebene deuten.
+
 ## Was der Vermittler prüft
 
 - **Herkunft**: Nur `abuelia81.github.io` und `localhost:8917` werden bedient.

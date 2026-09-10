@@ -117,7 +117,8 @@ h1{font-family:'Cinzel',serif;font-size:clamp(.9rem,2.5vw,1.3rem);
         <span class="lesart-l">Für Modalverben und Konnektoren zeigt jede Schale eine eigene Lesart.</span>
       </div>
       <p class="hinweis">Die Schale wählt die Leseebene, die Lage den Pol der Zeichensituation.
-        In die Deutung des Vermittlers fließen beide noch nicht ein.</p>
+        Beide gehen in die Deutung ein: Wer die Kugel weiterdreht oder tiefer schält
+        und dasselbe Wort erneut schickt, bekommt eine andere Antwort.</p>
     </div>
 
     <div class="card">
@@ -258,7 +259,7 @@ const W=cv.width, CX=W/2, CY=W/2, RAD=W*0.395;
 
 let yaw=0.5, pitch=-0.26, schale=0;
 let aktivesProfil=null, aktiveDomaene=null, aktivesWort=null;
-let selbstDreht=true;
+let selbstDreht=true, nutzerHatGedreht=false;
 
 const rad=d=>d*Math.PI/180;
 const aufKugel=(lon,lat)=>{
@@ -389,7 +390,7 @@ function zeichne(){
 // ── Bedienung der Kugel ───────────────────────────────────────────────────────
 let ziehe=false, lx=0, ly=0;
 cv.addEventListener("pointerdown",e=>{
-  ziehe=true; selbstDreht=false; lx=e.clientX; ly=e.clientY; cv.setPointerCapture(e.pointerId);
+  ziehe=true; selbstDreht=false; nutzerHatGedreht=true; lx=e.clientX; ly=e.clientY; cv.setPointerCapture(e.pointerId);
 });
 cv.addEventListener("pointermove",e=>{
   if(!ziehe) return;
@@ -401,7 +402,7 @@ cv.addEventListener("pointermove",e=>{
 cv.addEventListener("keydown",e=>{
   const s={ArrowLeft:[-.17,0],ArrowRight:[.17,0],ArrowUp:[0,-.13],ArrowDown:[0,.13]}[e.key];
   if(!s) return;
-  e.preventDefault(); selbstDreht=false;
+  e.preventDefault(); selbstDreht=false; nutzerHatGedreht=true;
   yaw+=s[0]; pitch=Math.max(-1.2,Math.min(1.2,pitch+s[1])); zeichne();
 });
 
@@ -424,8 +425,10 @@ function richteAus(prof){
   aktiveDomaene=idx;
   const dom=DOMAINS[idx], g=gewichte(prof);
 
-  // die Hauptdomäne nach vorn drehen, Neigung beibehalten
-  if(!ziehe){ selbstDreht=false; yaw=-rad(idx*45); }
+  // Die Hauptdomäne nach vorn drehen – aber nur, solange der Nutzer die Kugel
+  // nicht selbst in der Hand hatte. Sonst würde die Lage überschrieben, und mit
+  // ihr der Pol, den er im Vordergrund haben wollte.
+  if(!ziehe && !nutzerHatGedreht){ selbstDreht=false; yaw=-rad(idx*45); }
 
   const tags=dom.schemata.map(s=>`<span class="tag">${s}</span>`).join('');
   const dname=dom.names[currentLang.code]||dom.id;
@@ -571,7 +574,8 @@ async function deute(dom,wort,rbox){
   try{
     const d=await vermittler('/deute',{
       instrument:'sprachkugel',
-      wort:wort, domaene:dom.id, sprache:currentLang.code
+      wort:wort, domaene:dom.id, sprache:currentLang.code,
+      schale:SCHALEN[schale].id, pol:POLE[polVorn()].id
     });
     rbox.textContent=d.text||'–';
   }catch(e){zeigeFehler(rbox,e);}
