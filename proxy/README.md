@@ -90,9 +90,20 @@ bekanntem Wort einer. Wenn dir das zu teuer wird, sind zwei Stellschrauben in
 - Für die Klassifikation ein eigenes, kleineres Modell verwenden
   (`claude-haiku-4-5`); sie ist nur eine Zuordnung zu acht Kennungen.
 
-## Domänentabelle synchron halten
+## Domänentabelle
 
-`worker.js` führt die Domänen beider Instrumente noch einmal, damit die Prompts
-serverseitig entstehen. Wenn du in einer HTML-Datei eine Domäne, ein Bildschema
-oder eine Beschreibung änderst, muss dieselbe Änderung in `worker.js` nachgezogen
-werden — sonst deutet das Instrument gegen eine veraltete Beschreibung.
+Die Domänen stehen nur an einer Stelle: in `domaenen.json` im Wurzelverzeichnis
+des Repos. Beide HTML-Seiten laden sie beim Start, der Worker holt sie von
+
+```
+https://abuelia81.github.io/kommunolabium/domaenen.json
+```
+
+und hält sie zehn Minuten lang zwischengespeichert. Eine Änderung an der Tabelle
+braucht also **kein** erneutes Einspielen des Workers — pushen genügt, spätestens
+zehn Minuten später deutet er gegen die neue Fassung. Fällt die Datei einmal aus,
+arbeitet der Worker mit der zuletzt geladenen Fassung weiter; nur wenn er noch nie
+eine hatte, meldet er einen Fehler.
+
+Liegt das Repo einmal woanders, ist `DOMAENEN_URL` oben in `worker.js` die einzige
+anzupassende Zeile.

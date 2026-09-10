@@ -10,9 +10,10 @@
  *   POST /klassifiziere  { instrument, wort }              → { domaene }
  *   POST /deute          { instrument, wort, domaene, sprache } → { text }
  *
- * Die Prompts und die Domänentabelle stehen hier, nicht beim Aufrufer. Wer
- * die Worker-URL findet, kann das Instrument benutzen – aber nicht beliebige
- * Anfragen auf fremde Rechnung an die API schicken.
+ * Die Prompts entstehen hier, nicht beim Aufrufer. Wer die Worker-URL findet,
+ * kann das Instrument benutzen – aber nicht beliebige Anfragen auf fremde
+ * Rechnung an die API schicken. Die Domänentabelle liest der Worker aus
+ * domaenen.json; sie steht nur an dieser einen Stelle im Projekt.
  *
  * Einrichtung: siehe README.md in diesem Ordner.
  */
@@ -30,61 +31,41 @@ const ERLAUBTE_HERKUNFT = [
 const MAX_WORTLAENGE = 80;
 
 // ── Domänen ────────────────────────────────────────────────────────────────
-// Muss mit den DOMAINS-Tabellen in den beiden HTML-Dateien übereinstimmen.
+// Einzige Quelle ist domaenen.json neben den beiden HTML-Dateien. Der Worker
+// holt sie beim ersten Aufruf und hält sie danach zwischengespeichert, damit
+// eine Änderung an der Tabelle nicht bedeutet, den Worker neu einzuspielen.
 
-const KOMMUNIKATIONSLABIUM = [
-  { id: "RAUM", dir: "N",
-    schemata: ["OBEN-UNTEN","VORNE-HINTEN","LINKS-RECHTS","NAH-FERN","ZENTRUM-PERIPHERIE"],
-    desc: "Räumliche Orientierung als Urgrund aller Bedeutung. Der Körper im Raum strukturiert das Denken." },
-  { id: "GRENZE", dir: "NO",
-    schemata: ["INNEN-AUSSEN","EINSCHLUSS","AUSSCHLUSS","GRENZE","SCHWELLE"],
-    desc: "Grenze als Erfahrung von Drinnen und Draußen. Schwellen, Übergänge, Kategorien und Schutz." },
-  { id: "BEWEGUNG", dir: "O",
-    schemata: ["QUELL-WEG-ZIEL","PFAD","RICHTUNG","TRAJEKTORIE","IMPULS"],
-    desc: "Quell-Weg-Ziel: Bewegung als Grundmetapher für Zeit, Ziel und Wandel." },
-  { id: "GLEICHGEWICHT", dir: "SO",
-    schemata: ["BALANCE","SYMMETRIE","ACHSE","GEGENGEWICHT","WAAGE"],
-    desc: "Balance zwischen Kräften. Grundlage für Harmonie, Gerechtigkeit und Spannung." },
-  { id: "KRAFT", dir: "S",
-    schemata: ["DRUCK","BLOCKIERUNG","ANZIEHUNG","WIDERSTAND","AGONIST"],
-    desc: "Kraft-Dynamik: Agonist gegen Antagonist. Physische Kraft als Basis für Kausalität und Macht." },
-  { id: "EINHEIT·MULTIPLIZITÄT", dir: "SW",
-    schemata: ["TEIL-GANZES","VERBINDUNG","TRENNUNG","SAMMLUNG","VIELFALT"],
-    desc: "Einheit und Vielheit: Das Verhältnis von Ganzem und Teilen, Verbindung und Differenz." },
-  { id: "IDENTITÄT", dir: "W",
-    schemata: ["REGION","ZYKLUS","DIREKT-PROZESS","ANPASSUNG","ABLAGERUNG"],
-    desc: "Identität als zyklischer Prozess: Schichtung, Wiederholung, Wandel. Das Selbst im Vollzug." },
-  { id: "EXISTENZ", dir: "NW",
-    schemata: ["SEIN","WERDEN","VERGEHEN","ANWESENHEIT","ABWESENHEIT"],
-    desc: "Existenz als fundamentales Schema: Vorhanden-sein und Nicht-sein. Ontologische Metaphern." },
-];
+const DOMAENEN_URL = "https://abuelia81.github.io/kommunolabium/domaenen.json";
+const CACHE_MS = 10 * 60 * 1000;
 
-const ASTROLABIUM = [
-  KOMMUNIKATIONSLABIUM[0],
-  { id: "CONTAINMENT", dir: "NO",
-    schemata: ["INNEN-AUSSEN","EINSCHLUSS","AUSSCHLUSS","GRENZE","DURCHGANG"],
-    desc: "Behälter-Schema: die Erfahrung von Drinnen und Draußen. Grundlage für Kategorien und Begrenzung." },
-  KOMMUNIKATIONSLABIUM[2],
-  { id: "GLEICHGEWICHT", dir: "SO",
-    schemata: ["BALANCE","SYMMETRIE","ACHSE","GEGENGEWICHT","WAAGE"],
-    desc: "Balance zwischen Kräften. Gleichgewicht als Basis für Harmonie, Gerechtigkeit, Spannung." },
-  { id: "KRAFT", dir: "S",
-    schemata: ["DRUCK","BLOCKIERUNG","ANZIEHUNG","WIDERSTAND","IMPULS","AGONIST"],
-    desc: "Kraft-Dynamik: Agonist gegen Antagonist. Physische Kraft als Basis für Kausalität und Macht." },
-  { id: "UNITÄT", dir: "SW",
-    schemata: ["TEIL-GANZES","VERBINDUNG","TRENNUNG","SAMMLUNG","MULTIPLIKATION"],
-    desc: "Teil-Ganzes-Schema: Verbindung und Trennung. Grundlage für Gemeinschaft und Zerfall." },
-  KOMMUNIKATIONSLABIUM[6],
-  KOMMUNIKATIONSLABIUM[7],
-];
+let domCache = null;
+let domZeit = 0;
+
+async function domaenen() {
+  const jetzt = Date.now();
+  if (domCache && jetzt - domZeit < CACHE_MS) return domCache;
+
+  try {
+    const r = await fetch(DOMAENEN_URL, { cf: { cacheTtl: 600, cacheEverything: true } });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const d = await r.json();
+    if (!Array.isArray(d.domaenen) || d.domaenen.length !== 8)
+      throw new Error("enthält nicht acht Domänen");
+    domCache = d.domaenen;
+    domZeit = jetzt;
+  } catch (e) {
+    // Eine einmal geladene Tabelle bleibt gültig, wenn die Quelle kurz ausfällt.
+    if (!domCache) throw new Error(`Domänentabelle nicht erreichbar (${e.message}).`);
+  }
+
+  return domCache;
+}
 
 const INSTRUMENTE = {
   kommunikationslabium: {
-    domaenen: KOMMUNIKATIONSLABIUM,
     stimme: "Du bist das Kommunikationslabium – ein lebendes Instrument der kognitiven Linguistik.",
   },
   astrolabium: {
-    domaenen: ASTROLABIUM,
     stimme: "Du bist ein lebendes Astrolabium der kognitiven Linguistik – ein Kommunikationsinstrument, das verkörperte Erfahrung in Sprache verwandelt.",
   },
 };
@@ -159,13 +140,14 @@ function pruefeWort(wert) {
 // ── Endpunkte ──────────────────────────────────────────────────────────────
 
 async function klassifiziere(env, koerper, herkunft) {
-  const instrument = INSTRUMENTE[koerper.instrument];
-  if (!instrument) return json({ fehler: "Unbekanntes Instrument." }, 400, herkunft);
+  if (!INSTRUMENTE[koerper.instrument])
+    return json({ fehler: "Unbekanntes Instrument." }, 400, herkunft);
 
   const wort = pruefeWort(koerper.wort);
   if (!wort) return json({ fehler: `Wort fehlt oder ist länger als ${MAX_WORTLAENGE} Zeichen.` }, 400, herkunft);
 
-  const liste = instrument.domaenen.map((d) => `${d.id}: ${d.schemata.join(", ")}`).join("\n");
+  const doms = await domaenen();
+  const liste = doms.map((d) => `${d.id}: ${d.schemata.join(", ")}`).join("\n");
 
   const text = await frageClaude(env, {
     inhalt:
@@ -178,11 +160,11 @@ async function klassifiziere(env, koerper, herkunft) {
   });
 
   const kennung = text.toUpperCase().replace(/[^A-ZÄÖÜ·]/g, "");
-  const treffer = instrument.domaenen.findIndex(
+  const treffer = doms.findIndex(
     (d) => d.id === kennung || kennung.startsWith(d.id.split("·")[0])
   );
 
-  return json({ domaene: instrument.domaenen[treffer >= 0 ? treffer : 0].id }, 200, herkunft);
+  return json({ domaene: doms[treffer >= 0 ? treffer : 0].id }, 200, herkunft);
 }
 
 async function deute(env, koerper, herkunft) {
@@ -192,7 +174,7 @@ async function deute(env, koerper, herkunft) {
   const wort = pruefeWort(koerper.wort);
   if (!wort) return json({ fehler: `Wort fehlt oder ist länger als ${MAX_WORTLAENGE} Zeichen.` }, 400, herkunft);
 
-  const dom = instrument.domaenen.find((d) => d.id === koerper.domaene);
+  const dom = (await domaenen()).find((d) => d.id === koerper.domaene);
   if (!dom) return json({ fehler: "Unbekannte Domäne." }, 400, herkunft);
 
   const sprache = SPRACHEN[koerper.sprache] || SPRACHEN.de;

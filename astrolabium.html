@@ -137,58 +137,19 @@ h1{font-family:'Cinzel',serif;font-size:clamp(.95rem,2.5vw,1.35rem);
 
 <script>
 // ══════════════════════════════════════════════════════════════════════════════
-// DOMAIN DEFINITIONS
 // ══════════════════════════════════════════════════════════════════════════════
-const DOMAINS = [
-  {
-    id:"RAUM", dir:"N", angle:0,
-    color:"#1b3554", highlight:"#2a5280",
-    schemata:["OBEN-UNTEN","VORNE-HINTEN","LINKS-RECHTS","NAH-FERN","ZENTRUM-PERIPHERIE"],
-    desc:"Räumliche Orientierung als Urgrund aller Bedeutung. Der Körper im Raum strukturiert das Denken."
-  },
-  {
-    id:"CONTAINMENT", dir:"NO", angle:45,
-    color:"#28184a", highlight:"#3d2a6e",
-    schemata:["INNEN-AUSSEN","EINSCHLUSS","AUSSCHLUSS","GRENZE","DURCHGANG"],
-    desc:"Behälter-Schema: die Erfahrung von Drinnen und Draußen. Grundlage für Kategorien und Begrenzung."
-  },
-  {
-    id:"BEWEGUNG", dir:"O", angle:90,
-    color:"#183a28", highlight:"#245238",
-    schemata:["QUELL-WEG-ZIEL","PFAD","RICHTUNG","TRAJEKTORIE","IMPULS"],
-    desc:"Quell-Weg-Ziel: Bewegung als Grundmetapher für Zeit, Ziel und Wandel."
-  },
-  {
-    id:"GLEICHGEWICHT", dir:"SO", angle:135,
-    color:"#3a2a10", highlight:"#5a4218",
-    schemata:["BALANCE","SYMMETRIE","ACHSE","GEGENGEWICHT","WAAGE"],
-    desc:"Balance zwischen Kräften. Gleichgewicht als Basis für Harmonie, Gerechtigkeit, Spannung."
-  },
-  {
-    id:"KRAFT", dir:"S", angle:180,
-    color:"#3a1818", highlight:"#5a2020",
-    schemata:["DRUCK","BLOCKIERUNG","ANZIEHUNG","WIDERSTAND","IMPULS","AGONIST"],
-    desc:"Kraft-Dynamik: Agonist gegen Antagonist. Physische Kraft als Basis für Kausalität und Macht."
-  },
-  {
-    id:"UNITÄT", dir:"SW", angle:225,
-    color:"#1a2a3a", highlight:"#22384e",
-    schemata:["TEIL-GANZES","VERBINDUNG","TRENNUNG","SAMMLUNG","MULTIPLIKATION"],
-    desc:"Teil-Ganzes-Schema: Verbindung und Trennung. Grundlage für Gemeinschaft und Zerfall."
-  },
-  {
-    id:"IDENTITÄT", dir:"W", angle:270,
-    color:"#281a38", highlight:"#3c2550",
-    schemata:["REGION","ZYKLUS","DIREKT-PROZESS","ANPASSUNG","ABLAGERUNG"],
-    desc:"Identität als zyklischer Prozess: Schichtung, Wiederholung, Wandel. Das Selbst im Vollzug."
-  },
-  {
-    id:"EXISTENZ", dir:"NW", angle:315,
-    color:"#181828", highlight:"#252542",
-    schemata:["SEIN","WERDEN","VERGEHEN","ANWESENHEIT","ABWESENHEIT"],
-    desc:"Existenz als fundamentales Schema: Vorhanden-sein und Nicht-sein. Ontologische Metaphern."
-  }
-];
+// DOMÄNEN – einzige Quelle ist domaenen.json (siehe dort)
+// ══════════════════════════════════════════════════════════════════════════════
+let DOMAINS = [];
+
+async function ladeDomaenen(){
+  const r = await fetch("domaenen.json",{cache:"no-cache"});
+  if(!r.ok) throw new Error(`domaenen.json antwortet mit ${r.status}.`);
+  const d = await r.json();
+  if(!Array.isArray(d.domaenen) || d.domaenen.length!==8)
+    throw new Error("domaenen.json enthält nicht acht Domänen.");
+  DOMAINS = d.domaenen;
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // LEXIKON – 1000 häufigste deutsche Wörter, zugeordnet den 8 Domänen
@@ -561,7 +522,7 @@ function buildSVG(){
     const lt=el('text',{x:lx,y:ly,'text-anchor':'middle','dominant-baseline':'central',
       'font-size':'7.5','font-family':"'Cinzel',serif",fill:'#c8a84b',
       transform:`rotate(${amid},${lx},${ly})`,'pointer-events':'none'});
-    lt.textContent=dom.id; segG.appendChild(lt);
+    lt.textContent=dom.names.de; segG.appendChild(lt);
     dom.schemata.slice(0,2).forEach((s,si)=>{
       const sa=a1+8+si*16;const[sx,sy]=polar(186,sa);
       const st=el('text',{x:sx,y:sy,'text-anchor':'middle','dominant-baseline':'central',
@@ -598,7 +559,7 @@ function activateDomain(idx){
   });
   const tags=dom.schemata.map(s=>`<span class="tag">${s}</span>`).join('');
   document.getElementById('domBox').innerHTML=`
-    <div class="dom-name fi">${dom.id}</div>
+    <div class="dom-name fi">${dom.names.de}</div>
     <div class="dom-dir fi">↗ ${dom.dir} &nbsp;·&nbsp; ${dom.angle}°</div>
     <div class="tags fi">${tags}</div>
     <div class="dom-desc fi">${dom.desc}</div>`;
@@ -629,6 +590,11 @@ async function send(){
     }
   } else {
     matchType=' (direkter Treffer)';
+  }
+
+  if(!DOMAINS.length){
+    zeigeFehler(rbox,new Error("Domänentabelle noch nicht geladen."));
+    return;
   }
 
   if(idx!==undefined){
@@ -665,7 +631,11 @@ async function holeDeutung(dom,wort,rbox){
 }
 
 document.getElementById('pin').addEventListener('keydown',e=>{if(e.key==='Enter')send();});
-buildSVG();
+ladeDomaenen().then(buildSVG).catch(e=>{
+  document.getElementById('domBox').innerHTML=
+    '<div class="placeholder fi">Domänentabelle nicht ladbar.</div>';
+  zeigeFehler(document.getElementById('rbox'),e);
+});
 </script>
 </body>
 </html>

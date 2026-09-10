@@ -1,0 +1,205 @@
+{
+  "_hinweis": "Einzige Quelle der Domaenentabelle. Gelesen von kommunikationslabium.html, astrolabium.html und proxy/worker.js. Reihenfolge = Index im Lexikon.",
+  "domaenen": [
+    {
+      "id": "RAUM",
+      "dir": "N",
+      "angle": 0,
+      "color": "#1b3554",
+      "highlight": "#2a5280",
+      "schemata": [
+        "OBEN-UNTEN",
+        "VORNE-HINTEN",
+        "LINKS-RECHTS",
+        "NAH-FERN",
+        "ZENTRUM-PERIPHERIE"
+      ],
+      "desc": "Räumliche Orientierung als Urgrund aller Bedeutung. Der Körper im Raum strukturiert das Denken.",
+      "names": {
+        "de": "RAUM",
+        "it": "SPAZIO",
+        "es": "ESPACIO",
+        "en": "SPACE",
+        "tr": "MEKÂN",
+        "ar": "الفضاء",
+        "fr": "ESPACE",
+        "pt": "ESPAÇO"
+      }
+    },
+    {
+      "id": "GRENZE",
+      "dir": "NO",
+      "angle": 45,
+      "color": "#28184a",
+      "highlight": "#3d2a6e",
+      "schemata": [
+        "INNEN-AUSSEN",
+        "EINSCHLUSS",
+        "AUSSCHLUSS",
+        "GRENZE",
+        "SCHWELLE"
+      ],
+      "desc": "Grenze als Erfahrung von Drinnen und Draußen. Schwellen, Übergänge, Kategorien und Schutz.",
+      "names": {
+        "de": "GRENZE",
+        "it": "CONFINE",
+        "es": "LÍMITE",
+        "en": "BOUNDARY",
+        "tr": "SINIR",
+        "ar": "الحد",
+        "fr": "FRONTIÈRE",
+        "pt": "FRONTEIRA"
+      }
+    },
+    {
+      "id": "BEWEGUNG",
+      "dir": "O",
+      "angle": 90,
+      "color": "#183a28",
+      "highlight": "#245238",
+      "schemata": [
+        "QUELL-WEG-ZIEL",
+        "PFAD",
+        "RICHTUNG",
+        "TRAJEKTORIE",
+        "IMPULS"
+      ],
+      "desc": "Quell-Weg-Ziel: Bewegung als Grundmetapher für Zeit, Ziel und Wandel.",
+      "names": {
+        "de": "BEWEGUNG",
+        "it": "MOVIMENTO",
+        "es": "MOVIMIENTO",
+        "en": "MOVEMENT",
+        "tr": "HAREKET",
+        "ar": "الحركة",
+        "fr": "MOUVEMENT",
+        "pt": "MOVIMENTO"
+      }
+    },
+    {
+      "id": "GLEICHGEWICHT",
+      "dir": "SO",
+      "angle": 135,
+      "color": "#3a2a10",
+      "highlight": "#5a4218",
+      "schemata": [
+        "BALANCE",
+        "SYMMETRIE",
+        "ACHSE",
+        "GEGENGEWICHT",
+        "WAAGE"
+      ],
+      "desc": "Balance zwischen Kräften. Grundlage für Harmonie, Gerechtigkeit und Spannung.",
+      "names": {
+        "de": "GLEICHGEWICHT",
+        "it": "EQUILIBRIO",
+        "es": "EQUILIBRIO",
+        "en": "BALANCE",
+        "tr": "DENGE",
+        "ar": "التوازن",
+        "fr": "ÉQUILIBRE",
+        "pt": "EQUILÍBRIO"
+      }
+    },
+    {
+      "id": "KRAFT",
+      "dir": "S",
+      "angle": 180,
+      "color": "#3a1818",
+      "highlight": "#5a2020",
+      "schemata": [
+        "DRUCK",
+        "BLOCKIERUNG",
+        "ANZIEHUNG",
+        "WIDERSTAND",
+        "AGONIST"
+      ],
+      "desc": "Kraft-Dynamik: Agonist gegen Antagonist. Physische Kraft als Basis für Kausalität und Macht.",
+      "names": {
+        "de": "KRAFT",
+        "it": "FORZA",
+        "es": "FUERZA",
+        "en": "FORCE",
+        "tr": "GÜÇ",
+        "ar": "القوة",
+        "fr": "FORCE",
+        "pt": "FORÇA"
+      }
+    },
+    {
+      "id": "EINHEIT·MULTIPLIZITÄT",
+      "dir": "SW",
+      "angle": 225,
+      "color": "#1a2a3a",
+      "highlight": "#22384e",
+      "schemata": [
+        "TEIL-GANZES",
+        "VERBINDUNG",
+        "TRENNUNG",
+        "SAMMLUNG",
+        "VIELFALT"
+      ],
+      "desc": "Einheit und Vielheit: Das Verhältnis von Ganzem und Teilen, Verbindung und Differenz.",
+      "names": {
+        "de": "EINHEIT·MULT.",
+        "it": "UNITÀ·MOLT.",
+        "es": "UNIDAD·MULT.",
+        "en": "UNITY·MULT.",
+        "tr": "BİRLİK·ÇOKLUK",
+        "ar": "الوحدة·التعدد",
+        "fr": "UNITÉ·MULT.",
+        "pt": "UNIDADE·MULT."
+      }
+    },
+    {
+      "id": "IDENTITÄT",
+      "dir": "W",
+      "angle": 270,
+      "color": "#281a38",
+      "highlight": "#3c2550",
+      "schemata": [
+        "REGION",
+        "ZYKLUS",
+        "DIREKT-PROZESS",
+        "ANPASSUNG",
+        "ABLAGERUNG"
+      ],
+      "desc": "Identität als zyklischer Prozess: Schichtung, Wiederholung, Wandel. Das Selbst im Vollzug.",
+      "names": {
+        "de": "IDENTITÄT",
+        "it": "IDENTITÀ",
+        "es": "IDENTIDAD",
+        "en": "IDENTITY",
+        "tr": "KİMLİK",
+        "ar": "الهوية",
+        "fr": "IDENTITÉ",
+        "pt": "IDENTIDADE"
+      }
+    },
+    {
+      "id": "EXISTENZ",
+      "dir": "NW",
+      "angle": 315,
+      "color": "#181828",
+      "highlight": "#252542",
+      "schemata": [
+        "SEIN",
+        "WERDEN",
+        "VERGEHEN",
+        "ANWESENHEIT",
+        "ABWESENHEIT"
+      ],
+      "desc": "Existenz als fundamentales Schema: Vorhanden-sein und Nicht-sein. Ontologische Metaphern.",
+      "names": {
+        "de": "EXISTENZ",
+        "it": "ESISTENZA",
+        "es": "EXISTENCIA",
+        "en": "EXISTENCE",
+        "tr": "VAROLUŞ",
+        "ar": "الوجود",
+        "fr": "EXISTENCE",
+        "pt": "EXISTÊNCIA"
+      }
+    }
+  ]
+}
