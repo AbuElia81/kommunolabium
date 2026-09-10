@@ -446,7 +446,7 @@ async function send(){
     const dom=activateDomain(hauptdomaene(prof),prof);
     document.getElementById('domBox').querySelector('.dom-dir')
       .insertAdjacentHTML('afterend',`<div class="match-info fi">Lexikon${matchType}</div>`);
-    await getResponse(dom,raw,rbox);
+    await getResponse(dom,raw,rbox,prof);
   } else {
     // KI-Klassifikation über den Vermittler
     document.getElementById('domBox').innerHTML='<div class="placeholder fi">KI klassifiziert…</div>';
@@ -464,11 +464,12 @@ async function send(){
   }
 }
 
-async function getResponse(dom,word,rbox){
+async function getResponse(dom,word,rbox,prof){
   try{
     const d=await vermittler('/deute',{
       instrument:'kommunikationslabium',
-      wort:word, domaene:dom.id, sprache:currentLang.code
+      wort:word, domaene:dom.id, sprache:currentLang.code,
+      profil:prof||null
     });
     rbox.textContent=d.text||'–';
   }catch(e){zeigeFehler(rbox,e);}

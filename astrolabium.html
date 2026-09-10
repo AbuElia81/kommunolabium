@@ -346,7 +346,7 @@ async function send(){
     const dom=DOMAINS[idx];
     document.getElementById('domBox').querySelector('.dom-dir').insertAdjacentHTML('afterend',
       `<div class="match-info fi">Lexikon${matchType}</div>`);
-    await holeDeutung(dom,raw,rbox);
+    await holeDeutung(dom,raw,rbox,prof);
   } else {
     // Unbekanntes Wort: erst über den Vermittler klassifizieren
     document.getElementById('domBox').innerHTML='<div class="placeholder fi">Unbekanntes Wort – KI klassifiziert…</div>';
@@ -366,9 +366,10 @@ async function send(){
   }
 }
 
-async function holeDeutung(dom,wort,rbox){
+async function holeDeutung(dom,wort,rbox,prof){
   try{
-    const d=await vermittler('/deute',{instrument:'astrolabium',wort:wort,domaene:dom.id,sprache:'de'});
+    const d=await vermittler('/deute',{instrument:'astrolabium',wort:wort,domaene:dom.id,
+      sprache:'de',profil:prof||null});
     rbox.textContent=d.text||'(keine Antwort)';
   }catch(e){zeigeFehler(rbox,e);}
 }

@@ -237,6 +237,16 @@ function profil(wert){
   return typeof wert==='number' ? [[wert,1]] : wert;
 }
 function hauptdomaene(p){ return p.reduce((a,b)=>b[1]>a[1]?b:a)[0]; }
+
+// Der Vermittler liefert ein Profil; ältere Fassungen nur eine Kennung.
+function profilAusAntwort(kd){
+  if(Array.isArray(kd.profil) && kd.profil.length){
+    const gueltig=kd.profil.filter(([i,g])=>Number.isInteger(i)&&i>=0&&i<DOMAINS.length&&g>0);
+    if(gueltig.length) return gueltig;
+  }
+  const fi=DOMAINS.findIndex(d=>d.id===kd.domaene);
+  return [[fi>=0?fi:0,1]];
+}
 function gewichte(p){
   const g=new Array(8).fill(0);
   for(const [i,w] of p) g[i]=w;
@@ -557,8 +567,7 @@ async function send(){
     try{
       const kd=await vermittler('/klassifiziere',{instrument:'sprachkugel',wort:raw});
       aktivesWort=null; zeigeLesart();
-      const fi=DOMAINS.findIndex(d=>d.id===kd.domaene);
-      const dom=richteAus([[fi>=0?fi:0,1]]);
+      const dom=richteAus(profilAusAntwort(kd));
       document.getElementById('domBox').querySelector('.dom-dir')
         .insertAdjacentHTML('afterend',`<div class="match-info fi">KI-Klassifikation</div>`);
       await deute(dom,raw,rbox);
@@ -575,7 +584,8 @@ async function deute(dom,wort,rbox){
     const d=await vermittler('/deute',{
       instrument:'sprachkugel',
       wort:wort, domaene:dom.id, sprache:currentLang.code,
-      schale:SCHALEN[schale].id, pol:POLE[polVorn()].id
+      schale:SCHALEN[schale].id, pol:POLE[polVorn()].id,
+      profil:aktivesProfil
     });
     rbox.textContent=d.text||'–';
   }catch(e){zeigeFehler(rbox,e);}

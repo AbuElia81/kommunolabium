@@ -63,6 +63,31 @@ ein Text im Antwortfeld erscheinen.
 
 ---
 
+## Profile
+
+`/klassifiziere` antwortet mit einem **Profil** statt einer einzelnen Kennung:
+
+```json
+{ "profil": [[4, 0.6], [7, 0.4]], "domaene": "KRAFT" }
+```
+
+Erster Wert ist der Domänenindex wie in `domaenen.json`, zweiter der Anteil.
+`domaene` nennt weiterhin die stärkste Domäne, damit ältere Aufrufer, die nur
+dieses Feld kennen, unverändert weiterlaufen.
+
+Der Worker verlangt vom Modell ein festes Zeilenformat (`KENNUNG ZAHL`) und
+prüft es selbst: Unbekannte Kennungen fallen weg, mehr als drei Domänen werden
+gekappt, die Anteile auf Summe 1 gebracht. Liefert das Modell gar nichts
+Brauchbares, fällt der Worker auf eine einzelne Domäne zurück — lieber grob
+richtig als keine Ausrichtung. Bewusst **kein** Structured Output: Ein falsch
+geratenes Schema ließe jede Anfrage scheitern, während fehlerhafte Ausgabe hier
+aufgefangen wird.
+
+`/deute` nimmt das Profil ebenfalls entgegen (Feld `profil`, freiwillig) und
+nennt die Nebendomänen im Systemprompt. Ungültige Profile — zu viele Einträge,
+Index außerhalb der Tabelle, Anteile ≤ 0 oder > 1, doppelte Domäne, Summe nicht
+1 — werden mit 400 abgewiesen.
+
 ## Schale und Pol
 
 `/deute` nimmt zwei weitere Felder entgegen, beide freiwillig:
