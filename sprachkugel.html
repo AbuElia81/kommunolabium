@@ -70,6 +70,9 @@ h1{font-family:'Cinzel',serif;font-size:clamp(.9rem,2.5vw,1.3rem);
 .vorn-w{font-family:'Cinzel',serif;font-size:.82rem;color:var(--gl);letter-spacing:.1em;}
 .vorn-e{font-size:.68rem;color:#999;font-style:italic;}
 .hinweis{font-size:.62rem;color:#55596a;font-style:italic;margin-top:7px;line-height:1.5;}
+.lesart{margin-top:9px;padding-top:8px;border-top:1px solid rgba(200,168,75,.12);}
+.lesart-t{font-size:.86rem;line-height:1.7;color:var(--ivory);}
+.lesart-l{color:#3a3a4a;font-style:italic;font-size:.78rem;}
 .zurueck{font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.16em;color:var(--gd);
   text-transform:uppercase;text-decoration:none;margin-top:20px;border-bottom:1px solid rgba(200,168,75,.25);}
 .zurueck:hover{color:var(--gold);}
@@ -110,8 +113,11 @@ h1{font-family:'Cinzel',serif;font-size:clamp(.9rem,2.5vw,1.3rem);
         <span class="vorn-w" id="vornWort">Darstellung</span>
         <span class="vorn-e" id="vornErkl">der Gegenstand</span>
       </div>
+      <div class="lesart" id="lesartBox">
+        <span class="lesart-l">Für Modalverben und Konnektoren zeigt jede Schale eine eigene Lesart.</span>
+      </div>
       <p class="hinweis">Die Schale wählt die Leseebene, die Lage den Pol der Zeichensituation.
-        Beide fließen noch nicht in die Deutung ein.</p>
+        In die Deutung des Vermittlers fließen beide noch nicht ein.</p>
     </div>
 
     <div class="card">
@@ -177,6 +183,8 @@ const POLE = [
 // ══════════════════════════════════════════════════════════════════════════════
 let DOMAINS = [];
 let LEX = {};
+let FORMEN = {};
+let LESARTEN = {};
 
 async function ladeDaten(){
   const [rd,rl] = await Promise.all([
@@ -192,6 +200,8 @@ async function ladeDaten(){
     throw new Error("lexikon.json enthält keine Wörter.");
   DOMAINS = d.domaenen;
   LEX = l.woerter;
+  FORMEN = l.formen || {};
+  LESARTEN = l.lesarten || {};
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -247,7 +257,7 @@ const cv=document.getElementById("kugel"), ctx=cv.getContext("2d");
 const W=cv.width, CX=W/2, CY=W/2, RAD=W*0.395;
 
 let yaw=0.5, pitch=-0.26, schale=0;
-let aktivesProfil=null, aktiveDomaene=null;
+let aktivesProfil=null, aktiveDomaene=null, aktivesWort=null;
 let selbstDreht=true;
 
 const rad=d=>d*Math.PI/180;
@@ -458,6 +468,21 @@ function switchLang(l){
   if(aktivesProfil) richteAus(aktivesProfil); else zeichne();
 }
 
+// Sweetsers drei Ebenen sind nur dort ausformuliert, wo dieselbe Form
+// nachweislich auf allen dreien gelesen wird – bei Modalverben, Konnektoren
+// und Konditionalen. Für alle anderen Wörter bleibt das Feld leer.
+function zeigeLesart(){
+  const box=document.getElementById('lesartBox');
+  const drei=aktivesWort?LESARTEN[aktivesWort]:null;
+  if(!drei){
+    box.innerHTML='<span class="lesart-l">'+(aktivesWort
+      ? `Für »${aktivesWort}« sind die drei Ebenen noch nicht ausformuliert.`
+      : 'Für Modalverben und Konnektoren zeigt jede Schale eine eigene Lesart.')+'</span>';
+    return;
+  }
+  box.innerHTML=`<p class="lesart-t fi">${drei[schale]}</p>`;
+}
+
 function buildSchalen(){
   const row=document.getElementById('schalenRow');
   row.innerHTML='';
@@ -469,6 +494,7 @@ function buildSchalen(){
     b.onclick=()=>{
       schale=i;
       [...row.children].forEach((c,k)=>c.setAttribute('aria-pressed',k===i?'true':'false'));
+      zeigeLesart();
       zeichne();
     };
     row.appendChild(b);
@@ -493,6 +519,13 @@ async function send(){
 
   let prof=profil(LEX[word]);
   let treffer='';
+  aktivesWort = prof ? word : null;
+
+  // Gebeugte Grundformen: muss, müsste, konnte … vor dem Stemmer
+  if(!prof && FORMEN[word]!==undefined){
+    prof=profil(LEX[FORMEN[word]]);
+    if(prof){ aktivesWort=FORMEN[word]; treffer=` (→${FORMEN[word]})`; }
+  }
 
   if(!prof){
     const stems=[
@@ -505,9 +538,11 @@ async function send(){
       word.replace(/s$/,''),
     ];
     for(const s of stems){
-      if(LEX[s]!==undefined){prof=profil(LEX[s]);treffer=` (→${s})`;break;}
+      if(LEX[s]!==undefined){prof=profil(LEX[s]);aktivesWort=s;treffer=` (→${s})`;break;}
     }
-  } else treffer=' ✦';
+  } else if(!treffer) treffer=' ✦';
+
+  zeigeLesart();
 
   if(prof){
     const dom=richteAus(prof);
@@ -518,12 +553,14 @@ async function send(){
     document.getElementById('domBox').innerHTML='<div class="placeholder fi">KI klassifiziert…</div>';
     try{
       const kd=await vermittler('/klassifiziere',{instrument:'sprachkugel',wort:raw});
+      aktivesWort=null; zeigeLesart();
       const fi=DOMAINS.findIndex(d=>d.id===kd.domaene);
       const dom=richteAus([[fi>=0?fi:0,1]]);
       document.getElementById('domBox').querySelector('.dom-dir')
         .insertAdjacentHTML('afterend',`<div class="match-info fi">KI-Klassifikation</div>`);
       await deute(dom,raw,rbox);
     }catch(e){
+      aktivesWort=null; zeigeLesart();
       document.getElementById('domBox').innerHTML='<div class="placeholder fi">Nicht ausgerichtet.</div>';
       zeigeFehler(rbox,e);
     }

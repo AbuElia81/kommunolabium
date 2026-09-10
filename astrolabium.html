@@ -162,12 +162,14 @@ async function ladeDaten(){
     throw new Error("lexikon.json enthält keine Wörter.");
   DOMAINS = d.domaenen;
   LEX = l.woerter;
+  FORMEN = l.formen || {};
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
 // LEXIKON – einzige Quelle ist lexikon.json (siehe dort)
 // ══════════════════════════════════════════════════════════════════════════════
 let LEX = {};
+let FORMEN = {};
 
 // Normalisierung: lowercase, ohne Umlaute-Varianten bereinigt
 function normalize(w) {
@@ -310,6 +312,12 @@ async function send(){
   // 1) Lookup im Lexikon
   let prof=profil(LEX[word]);
   let matchType='';
+  // Gebeugte Grundformen: muss, müsste, konnte … vor dem Stemmer
+  if(!prof && FORMEN[word]!==undefined){
+    prof=profil(LEX[FORMEN[word]]);
+    if(prof) matchType=` (→ ${FORMEN[word]})`;
+  }
+
   if(!prof){
     // Stemming: try without common suffixes
     const stems=[
@@ -322,7 +330,7 @@ async function send(){
     for(const s of stems){
       if(LEX[s]!==undefined){prof=profil(LEX[s]);matchType=` (→ ${s})`;break;}
     }
-  } else {
+  } else if(!matchType) {
     matchType=' (direkter Treffer)';
   }
 
