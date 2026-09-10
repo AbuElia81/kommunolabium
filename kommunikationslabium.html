@@ -249,319 +249,26 @@ function zeigeFehler(box,e){
 // ══════════════════════════════════════════════════════════════════════════════
 let DOMAINS = [];
 
-async function ladeDomaenen(){
-  const r = await fetch("domaenen.json",{cache:"no-cache"});
-  if(!r.ok) throw new Error(`domaenen.json antwortet mit ${r.status}.`);
-  const d = await r.json();
+async function ladeDaten(){
+  const [rd,rl] = await Promise.all([
+    fetch("domaenen.json",{cache:"no-cache"}),
+    fetch("lexikon.json",{cache:"no-cache"})
+  ]);
+  if(!rd.ok) throw new Error(`domaenen.json antwortet mit ${rd.status}.`);
+  if(!rl.ok) throw new Error(`lexikon.json antwortet mit ${rl.status}.`);
+  const d = await rd.json(), l = await rl.json();
   if(!Array.isArray(d.domaenen) || d.domaenen.length!==8)
     throw new Error("domaenen.json enthält nicht acht Domänen.");
+  if(!l.woerter || typeof l.woerter!=="object")
+    throw new Error("lexikon.json enthält keine Wörter.");
   DOMAINS = d.domaenen;
+  LEX = l.woerter;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// LEXIKON – ~1000 Wörter DE + parallele Einträge für andere Sprachen
+// LEXIKON – einzige Quelle ist lexikon.json (siehe dort)
 // ══════════════════════════════════════════════════════════════════════════════
-// 0=RAUM,1=GRENZE,2=BEWEGUNG,3=GLEICHGEWICHT,4=KRAFT,5=EINHEIT·MULT.,6=IDENTITÄT,7=EXISTENZ
-const LEX = {
-// RAUM
-"oben":0,"unten":0,"links":0,"rechts":0,"vorne":0,"hinten":0,"hier":0,"dort":0,"da":0,
-"hoch":0,"tief":0,"weit":0,"ort":0,"stelle":0,"platz":0,"raum":0,"feld":0,
-"mitte":0,"ecke":0,"seite":0,"ebene":0,"höhe":0,"tiefe":0,
-"breite":0,"länge":0,"abstand":0,"nähe":0,"umgebung":0,"gegend":0,"bereich":0,
-"gebiet":0,"zone":0,"lage":0,"position":0,"richtung":0,"norden":0,"süden":0,
-"osten":0,"westen":0,"himmel":0,"erde":0,"boden":0,"decke":0,"wand":0,"dach":0,
-"fenster":0,"treppe":0,"straße":0,"gasse":0,"hof":0,"garten":0,"wiese":0,
-"berg":0,"tal":0,"küste":0,"fluss":0,"see":0,"meer":0,"land":0,"stadt":0,"dorf":0,
-"keller":0,"turm":0,"brücke":0,"tunnel":0,"hafen":0,"bahnhof":0,
-"kreuzung":0,"hügel":0,"abhang":0,"hang":0,"gipfel":0,"spitze":0,"grund":0,
-"ferne":0,"weite":0,"zentrum":0,"peripherie":0,"auf":0,"über":0,"unter":0,
-"neben":0,"zwischen":0,"entlang":0,"herum":0,
-"irgendwo":0,"überall":0,"sonne":0,"mond":0,"stern":0,"planet":0,"schatten":0,
-"licht":0,"hell":0,"dunkel":0,"sicht":0,"perspektive":0,"ausblick":0,"blickfeld":0,
-"landschaft":0,"panorama":0,"oberfläche":0,
-// GRENZE
-"grenze":1,"innen":1,"außen":1,"hülle":1,"schale":1,"behälter":1,"kasten":1,
-"kiste":1,"schachtel":1,"tasche":1,"sack":1,"beutel":1,"tüte":1,"flasche":1,
-"dose":1,"topf":1,"glas":1,"gefäß":1,"box":1,"truhe":1,"schrank":1,"fach":1,
-"käfig":1,"zaun":1,"graben":1,"gefängnis":1,"höhle":1,
-"nest":1,"loch":1,"öffnung":1,"spalte":1,"riss":1,"tor":1,"klappe":1,"deckel":1,
-"verschluss":1,"schloss":1,"siegel":1,"verpackung":1,"umschlag":1,"koffer":1,
-"rucksack":1,"drinnen":1,"draußen":1,"einschluss":1,"ausschluss":1,"einschließen":1,
-"ausschließen":1,"begrenzen":1,"umgrenzen":1,"umfassen":1,"umhüllen":1,
-"einrahmen":1,"umgeben":1,"abgrenzen":1,"abschirmen":1,"isolieren":1,"absondern":1,
-"heimat":1,"geborgenheit":1,"schutz":1,"sicherheit":1,"zuflucht":1,"asyl":1,
-"zuhause":1,"wohnung":1,"hütte":1,"unterkunft":1,"obdach":1,"schirm":1,
-"schleier":1,"maske":1,"verkleidung":1,"tarnung":1,"kategorie":1,"klasse":1,
-"rahmen":1,"kontext":1,"umfeld":1,"milieu":1,"atmosphäre":1,"haut":1,"inneres":1,
-"äußeres":1,"inhalt":1,"volumen":1,"speicher":1,"reservoir":1,"becken":1,
-"schwelle":1,"übergang":1,"passage":1,"durchgang":1,"portal":1,"pforte":1,
-"eingang":1,"ausgang":1,"membran":1,"filter":1,"barriere":1,"wall":1,
-"bollwerk":1,"damm":1,"grenzstein":1,"markierung":1,"linie":1,"demarkation":1,
-"abgrenzung":1,"trennlinie":1,"scheidelinie":1,"saum":1,
-// BEWEGUNG
-"laufen":2,"rennen":2,"springen":2,"fallen":2,"steigen":2,
-"sinken":2,"fliegen":2,"schwimmen":2,"fahren":2,"reiten":2,"reisen":2,"wandern":2,
-"ziehen":2,"treiben":2,"strömen":2,"fließen":2,"rollen":2,"gleiten":2,"rutschen":2,
-"kriechen":2,"schleichen":2,"schreiten":2,"traben":2,"stolpern":2,"stürzen":2,
-"aufbrechen":2,"ankommen":2,"abfahren":2,"abreisen":2,"flüchten":2,"fliehen":2,
-"entkommen":2,"verfolgen":2,"jagen":2,"streben":2,"ziel":2,"quelle":2,"pfad":2,
-"route":2,"kurs":2,"geschwindigkeit":2,"eile":2,"pause":2,"stillstand":2,
-"halt":2,"rast":2,"beginn":2,"start":2,"ankunft":2,"abfahrt":2,
-"abflug":2,"landung":2,"rückkehr":2,"heimkehr":2,"aufstieg":2,"abstieg":2,
-"absturz":2,"sprung":2,"schritt":2,"lauf":2,"marsch":2,
-"wanderung":2,"reise":2,"fahrt":2,"flug":2,"zug":2,"strom":2,"welle":2,
-"bewegung":2,"schwung":2,"impuls":2,"momentum":2,"trajektorie":2,
-"spur":2,"fortschritt":2,"rückschritt":2,"wandel":2,"veränderung":2,
-"entwicklung":2,"evolution":2,"wachstum":2,"ausdehnung":2,"expansion":2,
-"ausbreitung":2,"verbreitung":2,"transport":2,"transfer":2,"übertragung":2,
-"revolution":2,"umlauf":2,"rotation":2,"kreisen":2,"spirale":2,"kurve":2,
-"bogen":2,"schleife":2,"flut":2,"brand":2,"ausbruch":2,"eruption":2,
-"migration":2,"exodus":2,"wanderschaft":2,"suche":2,"sehnsucht":2,"drang":2,
-"trieb":2,"abweichen":2,"irren":2,"umweg":2,"beschleunigung":2,"verlauf":2,
-"prozess":2,"ablauf":2,"zeitverlauf":2,
-// GLEICHGEWICHT
-"gleichgewicht":3,"harmonie":3,"symmetrie":3,"ordnung":3,
-"ausgleich":3,"kompensation":3,"gegengewicht":3,"last":3,"stabilität":3,
-"schwanken":3,"kippen":3,"halten":3,"stützen":3,"tragen":3,"ruhe":3,"stille":3,
-"eintracht":3,"übereinstimmung":3,"proportion":3,
-"maß":3,"mittelweg":3,"kompromiss":3,"gerechtigkeit":3,"fairness":3,"recht":3,
-"unrecht":3,"schuld":3,"verantwortung":3,"verdienst":3,"lohn":3,
-"belohnung":3,"vergeltung":3,"wiedergutmachung":3,"waage":3,"gewicht":3,
-"schwerpunkt":3,"achse":3,"drehpunkt":3,"spannung":3,"entspannung":3,
-"anspannung":3,"lockerheit":3,"rhythmus":3,"takt":3,"gleichmaß":3,
-"regelmäßigkeit":3,"periodizität":3,"herzschlag":3,"puls":3,"schwingung":3,
-"frequenz":3,"resonanz":3,"konsonanz":3,"dissonanz":3,"melodie":3,"klang":3,
-"ton":3,"stimmung":3,"gleichklang":3,"polarität":3,"dialektik":3,"aufhebung":3,
-"synthese":3,"koordination":3,"abstimmung":3,"synchronisation":3,"konsens":3,
-"einigung":3,"übergewicht":3,"chaos":3,"unordnung":3,"gleichmut":3,
-"gelassenheit":3,"fassung":3,"würde":3,"disziplin":3,"selbstkontrolle":3,
-"beherrschung":3,"mäßigung":3,"normalzustand":3,"gleichstand":3,"patt":3,
-// KRAFT
-"kraft":4,"stärke":4,"schwäche":4,"macht":4,"gewalt":4,"energie":4,
-"druck":4,"stoß":4,"schlag":4,"treffer":4,"hieb":4,"stich":4,
-"widerstand":4,"hemmung":4,"blockierung":4,"hindernis":4,"schranke":4,
-"anziehung":4,"abstoßung":4,"gravitation":4,"schwerkraft":4,"reibung":4,
-"kampf":4,"konflikt":4,"streit":4,"auseinandersetzung":4,
-"sieg":4,"niederlage":4,"triumph":4,"scheitern":4,"besiegen":4,"unterwerfen":4,
-"beherrschen":4,"dominieren":4,"überwältigen":4,"unterdrücken":4,"zwingen":4,
-"nötigen":4,"befreien":4,"durchbrechen":4,"überwinden":4,"bezwingen":4,
-"verteidigung":4,"angriff":4,"offensive":4,"defensive":4,"waffe":4,
-"feind":4,"gegner":4,"opponent":4,"autorität":4,"hierarchie":4,"kontrolle":4,
-"herrschaft":4,"einfluss":4,"wirkung":4,"ursache":4,"folge":4,"ergebnis":4,
-"explosion":4,"entladung":4,"wut":4,"zorn":4,"aggression":4,"leidenschaft":4,
-"glut":4,"hitze":4,"kälte":4,"motor":4,"triebkraft":4,
-"dynamik":4,"kapital":4,"ressource":4,"potential":4,"muskeln":4,"ausdauer":4,
-"leistung":4,"ermächtigung":4,"vollmacht":4,"mandat":4,"auftrag":4,
-"müssen":4,"können":4,"zwang":4,"notwendigkeit":4,"strafe":4,
-// EINHEIT·MULTIPLIZITÄT
-"einheit":5,"gemeinschaft":5,"gesellschaft":5,"volk":5,"nation":5,"gruppe":5,
-"team":5,"verein":5,"verband":5,"organisation":5,"verbindung":5,"bindung":5,
-"beziehung":5,"kontakt":5,"zusammenhang":5,"fusion":5,
-"vereinigung":5,"integration":5,"trennung":5,"spaltung":5,"scheidung":5,
-"bruch":5,"verlust":5,"isolation":5,"ausgrenzung":5,"solidarität":5,
-"zusammenhalt":5,"kohäsion":5,"ganzheit":5,"vollständigkeit":5,"integrität":5,
-"teil":5,"glied":5,"mitglied":5,"teilnahme":5,"beteiligung":5,
-"anteil":5,"anteilnahme":5,"empathie":5,"familie":5,"verwandtschaft":5,
-"freundschaft":5,"kameradschaft":5,"bruderschaft":5,"partnerschaft":5,"ehe":5,
-"zuneigung":5,"verbundenheit":5,"vertrauen":5,"treue":5,"loyalität":5,
-"verrat":5,"feindschaft":5,"entfremdung":5,"netz":5,"netzwerk":5,"geflecht":5,
-"gewebe":5,"gefüge":5,"struktur":5,"system":5,"organismus":5,"organ":5,
-"menge":5,"vielzahl":5,"anzahl":5,"summe":5,"gesamtheit":5,"alle":5,"wir":5,
-"miteinander":5,"füreinander":5,"gegenseitig":5,"gemeinsam":5,"kollektiv":5,
-"kommunität":5,"bürgerschaft":5,"nachbarschaft":5,"gemeinde":5,"plural":5,
-"heterogenität":5,"diversität":5,"ähnlichkeit":5,
-"konformität":5,"heirat":5,"hochzeit":5,"paar":5,"kollaboration":5,
-"kooperation":5,"zusammenarbeit":5,"koexistenz":5,"zerfall":5,"auflösung":5,
-"aufbau":5,"konstruktion":5,"schöpfung":5,"generation":5,"fortpflanzung":5,
-"multiplizität":5,"vielheit":5,"pluralismus":5,"mannigfaltigkeit":5,
-// IDENTITÄT
-"selbst":6,"seele":6,"person":6,"charakter":6,"persönlichkeit":6,
-"wesen":6,"natur":6,"herkunft":6,"wurzel":6,"abstammung":6,
-"erbe":6,"tradition":6,"brauch":6,"gewohnheit":6,"ritual":6,"zeremonie":6,
-"erinnerung":6,"gedächtnis":6,"kindheit":6,
-"jugend":6,"alter":6,"biographie":6,"schicksal":6,"name":6,"bezeichnung":6,
-"titel":6,"rolle":6,"funktion":6,"beruf":6,"berufung":6,"aufgabe":6,"mission":6,
-"zweck":6,"spiegel":6,"reflexion":6,"selbstbild":6,"ruf":6,"ansehen":6,
-"stolz":6,"scham":6,"verwandlung":6,
-"metamorphose":6,"reifung":6,"prägung":6,"formung":6,"bildung":6,"erziehung":6,
-"sozialisation":6,"kultur":6,"zivilisation":6,"glaube":6,"überzeugung":6,
-"wert":6,"normen":6,"prinzip":6,"moral":6,"ethik":6,"gewissen":6,
-"sprache":6,"ausdruck":6,"stil":6,"erscheinung":6,"aussehen":6,
-"gestalt":6,"silhouette":6,"haltung":6,"geste":6,"mimik":6,"blick":6,
-"nationalität":6,"dialekt":6,"akzent":6,"narbe":6,"wunde":6,
-"einstellung":6,"mentalität":6,"weltanschauung":6,"ideologie":6,"dogma":6,
-"bleiben":6,"altern":6,"erinnern":6,"lernen":6,
-"schüler":6,"lehrer":6,"meister":6,"jünger":6,"nachfolger":6,"vorbild":6,
-// EXISTENZ
-"existenz":7,"dasein":7,"wirklichkeit":7,"realität":7,"wahrheit":7,
-"wahrhaftigkeit":7,"echtheit":7,"authentizität":7,"leben":7,"sterben":7,
-"geburt":7,"entstehung":7,"vergänglichkeit":7,"sterblichkeit":7,"unsterblichkeit":7,
-"ewigkeit":7,"moment":7,"augenblick":7,"jetzt":7,"präsenz":7,
-"anwesenheit":7,"abwesenheit":7,"fehlen":7,"mangel":7,"lücke":7,
-"leere":7,"schweigen":7,"einsamkeit":7,"sinn":7,"bedeutung":7,"wunder":7,
-"geheimnis":7,"rätsel":7,"mystik":7,"spiritualität":7,"gott":7,"göttlich":7,
-"heilig":7,"sakral":7,"transzendenz":7,"immanenz":7,
-"bestimmung":7,"zufall":7,"wille":7,"entscheidung":7,"wahl":7,
-"möglichkeit":7,"hoffnung":7,"verzweiflung":7,"angst":7,"mut":7,"tapferkeit":7,
-"trauer":7,"freude":7,"glück":7,"leid":7,"schmerz":7,"hass":7,
-"gleichgültigkeit":7,"mitgefühl":7,"erscheinen":7,"verschwinden":7,"auftauchen":7,
-"entfalten":7,"verblühen":7,"welken":7,"blühen":7,"gedeihen":7,
-"ende":7,"vollendung":7,"geist":7,"bewusstsein":7,"unterbewusstsein":7,
-"traum":7,"vision":7,"halluzination":7,"phantom":7,"illusion":7,"täuschung":7,
-"schein":7,"unendlichkeit":7,"begrenztheit":7,"endlichkeit":7,"kosmos":7,
-"universum":7,"welt":7,"dunkelheit":7,"finsternis":7,"schlaf":7,"erwachen":7,
-"bewusstlosigkeit":7,"trance":7,"verfall":7,"neugeburt":7,
-"auferstehung":7,"erneuerung":7,"renaissance":7,"wiederkehr":7,
-// Häufige Funktionswörter
-"der":0,"die":0,"das":0,"ein":7,"eine":7,"und":5,"oder":3,"aber":4,
-"wenn":2,"weil":4,"als":3,"so":0,"sehr":4,"mehr":2,"noch":2,"schon":7,
-"nur":3,"auch":5,"doch":4,"ja":7,"nein":7,"nicht":7,"kein":7,
-"man":6,"du":6,"er":6,"sie":6,"es":7,"mein":6,"dein":6,
-"mit":5,"ohne":5,"für":5,"gegen":4,"von":0,"zu":2,"an":0,"in":1,
-"aus":1,"bei":0,"nach":2,"seit":7,"bis":2,"ab":2,"um":2,"durch":2,
-"haben":7,"sehen":0,"hören":0,
-"sagen":6,"denken":6,"wissen":6,"glauben":6,"fühlen":7,"machen":4,
-"gut":3,"schlecht":3,"groß":0,"klein":0,"viel":5,"wenig":5,
-"lang":2,"kurz":2,"neu":7,"alt":7,"jung":7,"schön":3,"schnell":2,"langsam":2,
-"stark":4,"schwach":4,"warm":4,"kalt":4,"laut":4,"leise":3,"hart":4,"weich":3,
-"wahr":7,"falsch":7,"richtig":3,"offen":1,"geschlossen":1,"leer":7,"voll":1,
-"gleich":3,"eigen":6,"fremd":6,"sicher":1,"gefährlich":4,"möglich":7,
-"wichtig":4,"bekannt":6,"unbekannt":7,"einfach":3,"schwierig":4,
-"früh":2,"spät":2,"sofort":2,"bald":2,"immer":7,"nie":7,"oft":6,"manchmal":6,
-"heute":7,"gestern":7,"morgen":7,"wo":0,"warum":4,"wozu":2,
-"mensch":6,"kind":6,"frau":6,"mann":6,"mutter":5,"vater":5,"eltern":5,
-"geschwister":5,"bruder":5,"schwester":5,"freund":5,"nachbar":5,"kollege":5,
-"tier":7,"hund":5,"katze":5,"vogel":2,"pflanze":7,"wald":0,
-"wasser":2,"luft":0,"wind":2,"regen":2,"schnee":3,"eis":3,
-"farbe":6,"rot":4,"blau":3,"grün":7,"schwarz":7,"weiß":3,"grau":3,
-"musik":3,"lied":3,"wort":6,"satz":6,"text":6,"buch":6,"brief":5,
-"frage":6,"antwort":6,"gespräch":5,"rede":4,"gedanke":6,"idee":6,"plan":2,
-"wunsch":2,"arbeit":4,"gesetz":4,"regel":6,"geld":4,"preis":4,
-"essen":1,"trinken":1,"schlafen":7,"atmen":7,"hand":4,"fuß":2,"kopf":6,
-"herz":7,"auge":0,"ohr":0,"mund":6,"arm":4,"bein":2,"brust":1,"blut":4,
-"knochen":4,"haar":6,"atem":7,"schule":6,"kirche":6,"haus":1,"zimmer":1,
-"auto":2,"flugzeug":2,"schiff":2,"fahrrad":2,"bett":7,"tisch":0,
-"brot":1,"nahrung":1,"gesundheit":3,"krankheit":4,"heilung":3,
-"zukunft":2,"erfahrung":7,"bild":6,
-"symbol":6,"zeichen":6,"metapher":6,"geschichte":6,"mythos":6,"märchen":6,
-"gold":4,"stein":0,"holz":7,"wissenschaft":6,"kunst":3,"religion":7,
-"philosophie":6,"politik":4,"demokratie":5,
-// Italiano (partial)
-"forza":4,"unità":5,"esistenza":7,
-"sopra":0,"sotto":0,"fuori":1,"andare":2,"venire":2,"correre":2,
-"cadere":2,"volare":2,"amore":7,"vita":7,"anima":7,
-"acqua":2,"fuoco":4,"luce":0,"ombra":0,
-"sogno":7,"paura":4,"gioia":7,"dolore":4,
-"pace":3,"libertà":7,"giustizia":3,"verità":7,"bellezza":3,
-"famiglia":5,"amico":5,"nemico":4,"cuore":7,"spirito":7,
-"frontiera":1,"viaggio":2,"cammino":2,
-"cambiamento":2,"trasformazione":6,"unione":5,
-"separazione":5,"comunità":5,"solitudine":7,"insieme":5,"diversità":5,
-// Español
-"espacio":0,"movimiento":2,"fuerza":4,"unidad":5,"identidad":6,"existencia":7,
-"arriba":0,"abajo":0,"fuera":1,
-"caer":2,"volar":2,"muerte":7,"cuerpo":6,
-"tierra":0,"agua":2,"fuego":4,
-"tiempo":7,"sueño":7,"miedo":4,"alegría":7,"dolor":4,
-"libertad":7,"justicia":3,"verdad":7,"belleza":3,
-"familia":5,"enemigo":4,"corazón":7,"espíritu":7,
-"viaje":2,"camino":2,"origen":6,
-"cambio":2,"transformación":6,"unión":5,"separación":5,"comunidad":5,
-"soledad":7,"diversidad":5,
-// English
-"space":0,"boundary":1,"movement":2,"unity":5,
-"above":0,"below":0,"inside":1,"outside":1,"go":2,"come":2,"run":2,
-"fall":2,"fly":2,"love":7,"death":7,"life":7,"soul":7,"body":6,
-"home":1,"earth":0,"sky":0,"water":2,"fire":4,"light":0,"shadow":0,
-"time":7,"memory":6,"dream":7,"fear":4,"joy":7,"pain":4,
-"peace":3,"war":4,"freedom":7,"truth":7,"beauty":3,
-"family":5,"friend":5,"enemy":4,"heart":7,"mind":6,"spirit":7,
-"longing":7,"border":1,"journey":2,"path":2,"goal":2,"origin":6,
-"change":2,"separation":5,"community":5,
-"loneliness":7,"together":5,"diversity":5,"threshold":1,"limit":1,
-"strength":4,"weakness":4,"power":4,"self":6,"being":7,
-"becoming":7,"nothingness":7,"presence":7,"absence":7,"now":7,
-"here":0,"there":0,"far":0,"near":0,"center":0,"edge":0,
-// Türkçe
-"mekan":0,"hareket":2,"denge":3,"güç":4,"birlik":5,
-"yukarı":0,"aşağı":0,"içeri":1,"dışarı":1,"gitmek":2,"gelmek":2,"koşmak":2,
-"düşmek":2,"uçmak":2,"aşk":7,"ölüm":7,"hayat":7,"beden":6,
-"ev":1,"toprak":0,"gökyüzü":0,"su":2,"ateş":4,"ışık":0,"gölge":0,
-"zaman":7,"anı":6,"bellek":6,"rüya":7,"korku":4,"sevinç":7,"acı":4,
-"barış":3,"savaş":4,"özgürlük":7,"adalet":3,"gerçek":7,"güzellik":3,
-"aile":5,"arkadaş":5,"düşman":4,"kalp":7,"akıl":6,"tin":7,
-"yolculuk":2,"yol":2,"hedef":2,"köken":6,
-"değişim":2,"dönüşüm":6,"birleşme":5,"ayrılık":5,"topluluk":5,
-"yalnızlık":7,"birlikte":5,"çeşitlilik":5,"özlem":7,
-// Arabe (transliteration → domain)
-"فضاء":0,"حد":1,"حركة":2,"توازن":3,"قوة":4,"هوية":6,
-"فوق":0,"تحت":0,"داخل":1,"خارج":1,"ذهاب":2,"مجيء":2,"حب":7,"موت":7,
-"حياة":7,"جسد":6,"بيت":1,"أرض":0,"سماء":0,"ماء":2,"نار":4,
-"ضوء":0,"ظل":0,"زمن":7,"ذاكرة":6,"حلم":7,"خوف":4,"فرح":7,"ألم":4,
-"سلام":3,"حرب":4,"حرية":7,"عدالة":3,"حقيقة":7,"جمال":3,"عائلة":5,
-"صديق":5,"عدو":4,"قلب":7,"عقل":6,"حنين":7,"حدود":1,
-"رحلة":2,"طريق":2,"هدف":2,"أصل":6,"تغيير":2,"مجتمع":5,
-"تنوع":5,"كيان":7,"لحظة":7,"حضور":7,"غياب":7,
-// Français
-"espace":0,"mouvement":2,"équilibre":3,"unité":5,"identité":6,
-"dessus":0,"dessous":0,"dedans":1,"dehors":1,"aller":2,"courir":2,
-"tomber":2,"voler":2,"amour":7,"mort":7,"vie":7,"corps":6,
-"maison":1,"terre":0,"ciel":0,"eau":2,"feu":4,"lumière":0,"ombre":0,
-"temps":7,"mémoire":6,"rêve":7,"peur":4,"joie":7,"douleur":4,
-"paix":3,"guerre":4,"liberté":7,"vérité":7,"beauté":3,
-"famille":5,"ami":5,"ennemi":4,"coeur":7,"esprit":6,
-"nostalgie":7,"voyage":2,"chemin":2,"but":2,
-"changement":2,"séparation":5,"communauté":5,
-"solitude":7,"ensemble":5,"diversité":5,"seuil":1,
-// Português
-"espaço":0,"equilíbrio":3,"força":4,"unidade":5,"identidade":6,"existência":7,
-"cima":0,"baixo":0,"fora":1,"vir":2,
-"cair":2,"voar":2,
-"céu":0,"água":2,"fogo":4,
-"memória":6,"sonho":7,"medo":4,"alegria":7,"dor":4,
-"liberdade":7,"justiça":3,"verdade":7,"beleza":3,
-"família":5,"inimigo":4,"coração":7,"espírito":7,
-"saudade":7,"viagem":2,"caminho":2,"origem":6,
-"mudança":2,"transformação":6,"união":5,"separação":5,"comunidade":5,
-"solidão":7,"diversidade":5,"limiar":1,
-
-// ── Mehrfachzuordnungen ────────────────────────────────────────────────────
-// Profile: [[domäne,gewicht],…]. Ein Wort aktiviert mehrere Bildschemata
-// zugleich – siehe Kommentar über LEX.
-"anfang":[[2,.5],[7,.5]],   // Urteil
-"antrieb":[[4,.6],[2,.4]],   // Urteil
-"diesseits":[[0,.55],[7,.45]],   // Urteil
-"differenz":[[5,.6],[1,.4]],   // Urteil
-"freiheit":[[4,.6],[7,.4]],   // Urteil
-"gang":[[0,.5],[2,.5]],   // Urteil
-"jenseits":[[0,.55],[7,.45]],   // Urteil
-"kontinuität":[[6,.6],[2,.4]],   // Urteil
-"liebe":[[5,.6],[7,.4]],   // Urteil
-"ohnmacht":[[4,.7],[7,.3]],   // Urteil
-"pflicht":[[3,.5],[6,.5]],   // Urteil
-"rand":[[1,.55],[0,.45]],   // Urteil
-"tempo":[[2,.75],[7,.25]],   // Urteil
-"tritt":[[2,.5],[4,.5]],   // Urteil
-"ursprung":[[7,.55],[6,.45]],   // Urteil
-"vergangenheit":[[6,.55],[7,.45]],   // Urteil
-"verhältnis":[[5,.55],[3,.45]],   // Urteil
-"werden":[[7,.65],[6,.35]],   // Urteil
-"zelle":[[1,.55],[5,.45]],   // Urteil
-"zugehörigkeit":[[5,.55],[6,.45]],   // Urteil
-"وحدة":[[5,.7],[7,.3]],   // Urteil
-// Zuvor doppelt eingetragen, Domäne jeweils einheitlich:
-"alma":7,"amigo":5,"amor":7,"bahn":2,"balance":3,"casa":1,
-"cielo":0,"confine":1,"corpo":6,"correr":2,"dentro":1,"equilibrio":3,
-"existence":7,"feuer":4,"fläche":0,"force":4,"frieden":3,"fronteira":1,
-"frontera":1,"frontière":1,"gegenwart":7,"gehen":2,"guerra":4,"horizont":0,
-"ich":6,"identity":6,"identità":6,"ir":2,"juntos":5,"justice":3,
-"kimlik":6,"kommen":2,"krieg":4,"limite":1,"luz":0,"límite":1,
-"mauer":1,"memoria":6,"mente":6,"meta":2,"morte":7,"movimento":2,
-"nichts":7,"nostalgia":7,"origine":6,"paz":3,"ruh":7,"sein":7,
-"sombra":0,"spazio":0,"stimme":6,"sınır":1,"terra":0,"tod":7,
-"transformation":6,"union":5,"varoluş":7,"venir":2,"vergessen":6,"vida":7,
-"vielfalt":5,"âme":7,"روح":7,"وجود":7,
-};
+let LEX = {};
 
 function normalize(w){return w.toLowerCase().trim();}
 
@@ -703,7 +410,7 @@ async function send(){
   rbox.innerHTML='<span class="loading">…</span>';
 
   if(!DOMAINS.length){
-    zeigeFehler(rbox,new Error("Domänentabelle noch nicht geladen."));
+    zeigeFehler(rbox,new Error("Daten noch nicht geladen."));
     return;
   }
 
@@ -761,9 +468,9 @@ async function getResponse(dom,word,rbox){
 
 document.getElementById('pin').addEventListener('keydown',e=>{if(e.key==='Enter')send();});
 buildLangButtons();
-ladeDomaenen().then(buildSVG).catch(e=>{
+ladeDaten().then(buildSVG).catch(e=>{
   document.getElementById('domBox').innerHTML=
-    '<div class="placeholder fi">Domänentabelle nicht ladbar.</div>';
+    '<div class="placeholder fi">Daten nicht ladbar.</div>';
   zeigeFehler(document.getElementById('rbox'),e);
 });
 </script>

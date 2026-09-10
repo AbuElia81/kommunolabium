@@ -107,3 +107,13 @@ eine hatte, meldet er einen Fehler.
 
 Liegt das Repo einmal woanders, ist `DOMAENEN_URL` oben in `worker.js` die einzige
 anzupassende Zeile.
+
+Das Lexikon steht ebenso nur einmal, in `lexikon.json`. Der Worker braucht es nicht —
+nachgeschlagen wird im Browser; er sieht ein Wort erst, wenn das Lexikon es nicht kennt.
+
+## Instrumente
+
+Drei Seiten benutzen den Vermittler und schicken ihre Kennung im Feld `instrument` mit:
+`kommunikationslabium`, `astrolabium` und `sprachkugel`. Jede hat im Worker ihre eigene
+Anrede; die Domänen teilen sie sich. Eine vierte Seite braucht nur einen weiteren
+Eintrag in `INSTRUMENTE`.

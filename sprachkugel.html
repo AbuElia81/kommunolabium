@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sprachkugel</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Cinzel:wght@400;600&family=Noto+Naskh+Arabic&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--gold:#c8a84b;--gl:#e8c96a;--gd:#8a6e28;--bg:#07070f;--bg2:#0f0f1c;--ivory:#f0e8d0;}
+body{background:var(--bg);color:var(--ivory);font-family:'IM Fell English',serif;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px;}
+h1{font-family:'Cinzel',serif;font-size:clamp(.9rem,2.5vw,1.3rem);
+  letter-spacing:.25em;color:var(--gold);text-align:center;margin-bottom:1px;text-transform:uppercase;}
+.sub{font-size:.62rem;color:var(--gd);letter-spacing:.15em;margin-bottom:14px;font-style:italic;text-align:center;}
+.stage{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;justify-content:center;width:100%;max-width:1160px;}
+.aw{position:relative;width:min(490px,92vw);flex-shrink:0;}
+#kugel{width:100%;height:auto;display:block;touch-action:none;cursor:grab;
+  filter:drop-shadow(0 0 30px rgba(200,168,75,.22));}
+#kugel:active{cursor:grabbing}
+#kugel:focus-visible{outline:1px solid var(--gold);outline-offset:4px}
+.hint{text-align:center;font-family:'Cinzel',serif;font-size:.54rem;letter-spacing:.18em;
+  color:var(--gd);text-transform:uppercase;margin-top:6px;}
+.panel{flex:1;min-width:268px;max-width:385px;display:flex;flex-direction:column;gap:12px;}
+.card{background:var(--bg2);border:1px solid var(--gd);border-radius:3px;padding:13px;position:relative;}
+.card::after{content:'';position:absolute;inset:2px;border:1px solid rgba(200,168,75,.07);
+  border-radius:2px;pointer-events:none;}
+.cl2{font-family:'Cinzel',serif;font-size:.56rem;letter-spacing:.2em;color:var(--gd);
+  text-transform:uppercase;margin-bottom:8px;display:block;}
+.lang-row{display:flex;flex-wrap:wrap;gap:4px;}
+.lbtn{background:#0a0a16;border:1px solid var(--gd);color:var(--gd);
+  font-family:'Cinzel',serif;font-size:.58rem;padding:4px 8px;cursor:pointer;
+  border-radius:2px;transition:all .15s;letter-spacing:.05em;}
+.lbtn:hover,.lbtn[aria-pressed="true"]{background:var(--gd);color:var(--ivory);}
+.lbtn:focus-visible{outline:1px solid var(--gl);outline-offset:1px}
+.prow{display:flex;gap:7px;}
+#pin{flex:1;background:#08081a;border:1px solid var(--gd);color:var(--ivory);
+  font-family:'IM Fell English',serif;font-size:1rem;padding:8px 11px;
+  border-radius:2px;outline:none;transition:border-color .2s;}
+#pin:focus{border-color:var(--gold);}
+#pin::placeholder{color:#444;font-style:italic;}
+.btn{background:var(--gd);border:1px solid var(--gold);color:var(--ivory);
+  font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:.1em;
+  padding:8px 13px;cursor:pointer;border-radius:2px;text-transform:uppercase;transition:all .18s;}
+.btn:hover{background:var(--gold);color:var(--bg);}
+.dom-name{font-family:'Cinzel',serif;font-size:.95rem;color:var(--gl);margin-bottom:3px;}
+.anteil{font-family:'Cinzel',serif;font-size:.6rem;color:var(--gd);letter-spacing:.08em;}
+.dom-dir{font-size:.68rem;color:var(--gd);margin-bottom:6px;letter-spacing:.1em;}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:7px;}
+.tag{background:rgba(200,168,75,.1);border:1px solid var(--gd);color:var(--gold);
+  font-size:.68rem;padding:2px 7px;border-radius:2px;font-style:italic;}
+.dom-desc{font-size:.76rem;color:#999;line-height:1.6;font-style:italic;}
+.placeholder{color:#3a3a4a;font-style:italic;font-size:.82rem;}
+.match-info{font-size:.62rem;color:var(--gd);margin-top:5px;font-style:italic;}
+#rbox{background:#060611;border:1px solid rgba(200,168,75,.12);border-radius:2px;
+  padding:11px;min-height:85px;font-size:.9rem;line-height:1.75;white-space:pre-wrap;}
+#rbox[dir="rtl"]{font-family:'Noto Naskh Arabic',serif;font-size:1rem;line-height:2;}
+/* Profilbalken */
+.bars{display:flex;flex-direction:column;gap:3px;margin-top:9px;
+  padding-top:8px;border-top:1px solid rgba(200,168,75,.12);}
+.bar{display:grid;grid-template-columns:7.4rem 1fr 2.2rem;gap:7px;align-items:center;}
+.bar-n{font-family:'Cinzel',serif;font-size:.5rem;letter-spacing:.06em;color:var(--gd);text-transform:uppercase;}
+.bar-t{height:6px;background:#0a0a16;border:1px solid rgba(200,168,75,.14);border-radius:1px;overflow:hidden;}
+.bar-f{height:100%;transition:width .55s ease;}
+.bar-v{font-family:'Cinzel',serif;font-size:.52rem;color:var(--gd);text-align:right;}
+/* Schalen und Pol */
+.schalen{display:flex;flex-wrap:wrap;gap:4px;}
+.vorn{margin-top:9px;padding-top:8px;border-top:1px solid rgba(200,168,75,.12);
+  display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;}
+.vorn-w{font-family:'Cinzel',serif;font-size:.82rem;color:var(--gl);letter-spacing:.1em;}
+.vorn-e{font-size:.68rem;color:#999;font-style:italic;}
+.hinweis{font-size:.62rem;color:#55596a;font-style:italic;margin-top:7px;line-height:1.5;}
+.zurueck{font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.16em;color:var(--gd);
+  text-transform:uppercase;text-decoration:none;margin-top:20px;border-bottom:1px solid rgba(200,168,75,.25);}
+.zurueck:hover{color:var(--gold);}
+@keyframes fu{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.fi{animation:fu .35s ease both;}
+.loading::after{content:'…';animation:ld 1s steps(3,end) infinite;}
+@keyframes ld{0%{content:'.'}33%{content:'..'}66%{content:'...'}100%{content:'…'}}
+@media (prefers-reduced-motion:reduce){.fi{animation:none}.bar-f{transition:none}}
+</style>
+</head>
+<body>
+<h1>Sprachkugel</h1>
+<p class="sub">Bildschemata · Schalen nach Sweetser · Pole nach Bühler</p>
+
+<div class="stage">
+  <div class="aw">
+    <canvas id="kugel" width="900" height="900" tabindex="0"
+      role="img" aria-label="Drehbare Sprachkugel mit acht Bildschema-Domänen und drei Bedeutungsschalen"></canvas>
+    <p class="hint">Ziehen zum Drehen · Pfeiltasten möglich</p>
+  </div>
+
+  <div class="panel">
+    <div class="card">
+      <span class="cl2">Sprache</span>
+      <div class="lang-row" id="langRow"></div>
+    </div>
+
+    <div class="card">
+      <span class="cl2">Aktive Domäne</span>
+      <div id="domBox"><div class="placeholder">Gib ein Wort ein – die Kugel richtet sich aus…</div></div>
+    </div>
+
+    <div class="card">
+      <span class="cl2">Schale · schälen</span>
+      <div class="schalen" id="schalenRow"></div>
+      <div class="vorn">
+        <span class="cl2" style="margin:0">Im Vordergrund</span>
+        <span class="vorn-w" id="vornWort">Darstellung</span>
+        <span class="vorn-e" id="vornErkl">der Gegenstand</span>
+      </div>
+      <p class="hinweis">Die Schale wählt die Leseebene, die Lage den Pol der Zeichensituation.
+        Beide fließen noch nicht in die Deutung ein.</p>
+    </div>
+
+    <div class="card">
+      <span class="cl2" id="promptLabel">Wort · Konzept · Erfahrung</span>
+      <div class="prow">
+        <input id="pin" type="text" placeholder="z.B. Freiheit, Grenze, Sturz…" autocomplete="off">
+        <button class="btn" id="sendBtn">→</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="cl2" id="responseLabel">Antwort des Instruments</span>
+      <div id="rbox"><span class="placeholder">Die Sprachkugel wartet…</span></div>
+    </div>
+  </div>
+</div>
+
+<a class="zurueck" href="index.html">← Zurück zur Übersicht</a>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════════
+// SPRACHEN
+// ══════════════════════════════════════════════════════════════════════════════
+const LANGS = [
+  {code:"de",name:"Deutsch",  flag:"🇩🇪",rtl:false,systemLang:"Deutsch",
+   ph:"z.B. Freiheit, Grenze, Sturz…", pl:"Wort · Konzept · Erfahrung", rl:"Antwort des Instruments"},
+  {code:"it",name:"Italiano", flag:"🇮🇹",rtl:false,systemLang:"italienisch",
+   ph:"es. libertà, confine, caduta…", pl:"Parola · Concetto · Esperienza", rl:"Risposta dello Strumento"},
+  {code:"es",name:"Español",  flag:"🇪🇸",rtl:false,systemLang:"spanisch",
+   ph:"ej. libertad, límite, caída…", pl:"Palabra · Concepto · Experiencia", rl:"Respuesta del Instrumento"},
+  {code:"en",name:"English",  flag:"🇬🇧",rtl:false,systemLang:"English",
+   ph:"e.g. freedom, boundary, falling…", pl:"Word · Concept · Experience", rl:"Response of the Instrument"},
+  {code:"tr",name:"Türkçe",   flag:"🇹🇷",rtl:false,systemLang:"Türkisch",
+   ph:"örn. özgürlük, sınır, düşüş…", pl:"Kelime · Kavram · Deneyim", rl:"Aracın Yanıtı"},
+  {code:"ar",name:"العربية",  flag:"🇸🇦",rtl:true, systemLang:"Arabisch",
+   ph:"مثلاً: حرية، حدود، سقوط…", pl:"كلمة · مفهوم · تجربة", rl:"إجابة الأداة"},
+  {code:"fr",name:"Français", flag:"🇫🇷",rtl:false,systemLang:"Französisch",
+   ph:"ex. liberté, frontière, chute…", pl:"Mot · Concept · Expérience", rl:"Réponse de l'Instrument"},
+  {code:"pt",name:"Português",flag:"🇵🇹",rtl:false,systemLang:"Portugiesisch",
+   ph:"ex. liberdade, fronteira, queda…", pl:"Palavra · Conceito · Experiência", rl:"Resposta do Instrumento"},
+];
+let currentLang = LANGS[0];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SCHALEN (Sweetser 1990) und POLE (Bühler 1934)
+// ══════════════════════════════════════════════════════════════════════════════
+// Die Schalen liegen ineinander: dieselbe Kraftfigur wirkt auf die Welt, auf das
+// Schließen, auf das Gespräch. Die Pole liegen nebeneinander auf der Oberfläche –
+// welcher nach vorn gedreht ist, steht im Vordergrund.
+const SCHALEN = [
+  {id:"Inhalt",      r:1.00, erkl:"Kräfte und Sachverhalte in der Welt"},
+  {id:"Epistemisch", r:0.73, erkl:"Kräfte im Schließen – was die Annahme zwingt"},
+  {id:"Sprechakt",   r:0.48, erkl:"Kräfte im Gespräch – was das Sagen zwingt"},
+];
+const POLE = [
+  {id:"Darstellung", kurz:"GEGENSTAND", erkl:"der Gegenstand",  lon:0,   lat:14},
+  {id:"Ausdruck",    kurz:"SENDER",     erkl:"der Sprecher",    lon:120, lat:14},
+  {id:"Appell",      kurz:"EMPFÄNGER",  erkl:"der Angesprochene",lon:240, lat:14},
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DATEN – domaenen.json und lexikon.json sind die einzigen Quellen
+// ══════════════════════════════════════════════════════════════════════════════
+let DOMAINS = [];
+let LEX = {};
+
+async function ladeDaten(){
+  const [rd,rl] = await Promise.all([
+    fetch("domaenen.json",{cache:"no-cache"}),
+    fetch("lexikon.json",{cache:"no-cache"})
+  ]);
+  if(!rd.ok) throw new Error(`domaenen.json antwortet mit ${rd.status}.`);
+  if(!rl.ok) throw new Error(`lexikon.json antwortet mit ${rl.status}.`);
+  const d = await rd.json(), l = await rl.json();
+  if(!Array.isArray(d.domaenen) || d.domaenen.length!==8)
+    throw new Error("domaenen.json enthält nicht acht Domänen.");
+  if(!l.woerter || typeof l.woerter!=="object")
+    throw new Error("lexikon.json enthält keine Wörter.");
+  DOMAINS = d.domaenen;
+  LEX = l.woerter;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// VERMITTLER – hält den API-Schlüssel serverseitig. Einrichtung: proxy/README.md
+// ══════════════════════════════════════════════════════════════════════════════
+const PROXY="PROXY_URL_HIER_EINSETZEN";
+
+async function vermittler(pfad,daten){
+  if(PROXY.startsWith("PROXY_URL"))
+    throw new Error("Kein Vermittler eingetragen – siehe proxy/README.md.");
+  const r=await fetch(PROXY+pfad,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(daten)
+  });
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.fehler||`Der Vermittler antwortet mit ${r.status}.`);
+  return d;
+}
+
+function zeigeFehler(box,e){
+  box.textContent='';
+  const s=document.createElement('span');
+  s.style.color='#844';
+  s.textContent=e.message||"Verbindungsfehler.";
+  box.appendChild(s);
+}
+
+// ── PROFILE ───────────────────────────────────────────────────────────────────
+function normalize(w){return w.toLowerCase().trim();}
+function profil(wert){
+  if(wert===undefined||wert===null) return null;
+  return typeof wert==='number' ? [[wert,1]] : wert;
+}
+function hauptdomaene(p){ return p.reduce((a,b)=>b[1]>a[1]?b:a)[0]; }
+function gewichte(p){
+  const g=new Array(8).fill(0);
+  for(const [i,w] of p) g[i]=w;
+  return g;
+}
+function mischeFarbe(a,b,t){
+  const z=h=>[1,3,5].map(i=>parseInt(h.substr(i,2),16));
+  const x=z(a), y=z(b);
+  return '#'+x.map((v,i)=>Math.round(v+(y[i]-v)*t).toString(16).padStart(2,'0')).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// KUGEL
+// ══════════════════════════════════════════════════════════════════════════════
+// Längengrad: die acht Domänen als Spalten von Pol zu Pol.
+// Breitengrad: als Gitter angelegt – der Metaphorisierungsgrad hat noch keine Daten.
+// Radius: die drei Schalen. Lage: der Pol im Vordergrund.
+const cv=document.getElementById("kugel"), ctx=cv.getContext("2d");
+const W=cv.width, CX=W/2, CY=W/2, RAD=W*0.395;
+
+let yaw=0.5, pitch=-0.26, schale=0;
+let aktivesProfil=null, aktiveDomaene=null;
+let selbstDreht=true;
+
+const rad=d=>d*Math.PI/180;
+const aufKugel=(lon,lat)=>{
+  const lo=rad(lon), la=rad(lat);
+  return {x:Math.cos(la)*Math.sin(lo), y:Math.sin(la), z:Math.cos(la)*Math.cos(lo)};
+};
+function drehen(p){
+  const cy=Math.cos(yaw), sy=Math.sin(yaw);
+  const x=p.x*cy+p.z*sy, z1=-p.x*sy+p.z*cy;
+  const cp=Math.cos(pitch), sp=Math.sin(pitch);
+  return {x, y:p.y*cp-z1*sp, z:p.y*sp+z1*cp};
+}
+const auf=(p,r)=>({sx:CX+p.x*r, sy:CY-p.y*r});
+
+function polVorn(){
+  let vorn=0, best=-2;
+  POLE.forEach((pol,k)=>{
+    const z=drehen(aufKugel(pol.lon,pol.lat)).z;
+    if(z>best){best=z; vorn=k;}
+  });
+  return vorn;
+}
+
+function gitterKugel(r,alpha){
+  ctx.strokeStyle=`rgba(200,168,75,${alpha})`; ctx.lineWidth=1;
+  for(let i=0;i<8;i++){
+    ctx.beginPath(); let an=false;
+    for(let la=-90;la<=90;la+=6){
+      const p=drehen(aufKugel(i*45-22.5,la));
+      if(p.z<=0){an=false;continue;}
+      const q=auf(p,r); an?ctx.lineTo(q.sx,q.sy):ctx.moveTo(q.sx,q.sy); an=true;
+    }
+    ctx.stroke();
+  }
+  for(let la=-60;la<=60;la+=30){
+    ctx.beginPath(); let an=false;
+    for(let lo=0;lo<=360;lo+=6){
+      const p=drehen(aufKugel(lo,la));
+      if(p.z<=0){an=false;continue;}
+      const q=auf(p,r); an?ctx.lineTo(q.sx,q.sy):ctx.moveTo(q.sx,q.sy); an=true;
+    }
+    ctx.stroke();
+  }
+}
+
+function zeichne(){
+  if(!DOMAINS.length) return;
+  ctx.clearRect(0,0,W,W);
+  const g = aktivesProfil ? gewichte(aktivesProfil) : new Array(8).fill(0);
+
+  // abgeschälte Schalen bleiben als Drahtgeflecht stehen
+  for(let s=0;s<schale;s++) gitterKugel(RAD*SCHALEN[s].r,.09);
+
+  const r=RAD*SCHALEN[schale].r;
+  const flaechen=[];
+  for(let i=0;i<8;i++){
+    for(let b=0;b<6;b++){
+      const lon1=i*45-22.5, lat1=-90+b*30;
+      const mitte=drehen(aufKugel(lon1+22.5, lat1+15));
+      if(mitte.z<=0) continue;
+      const rand=[];
+      for(let k=0;k<=6;k++) rand.push(aufKugel(lon1+45*k/6, lat1));
+      for(let k=0;k<=6;k++) rand.push(aufKugel(lon1+45, lat1+30*k/6));
+      for(let k=6;k>=0;k--) rand.push(aufKugel(lon1+45*k/6, lat1+30));
+      for(let k=6;k>=0;k--) rand.push(aufKugel(lon1, lat1+30*k/6));
+      flaechen.push({z:mitte.z, i, rand});
+    }
+  }
+  flaechen.sort((a,b)=>a.z-b.z);
+
+  for(const f of flaechen){
+    const dom=DOMAINS[f.i];
+    const stark=(aktiveDomaene===f.i);
+    const grund=stark?dom.highlight:mischeFarbe(dom.color,dom.highlight,Math.min(1,g[f.i]*1.6));
+    ctx.beginPath();
+    f.rand.forEach((p,k)=>{const q=auf(drehen(p),r); k?ctx.lineTo(q.sx,q.sy):ctx.moveTo(q.sx,q.sy);});
+    ctx.closePath();
+    ctx.globalAlpha=0.62+f.z*0.3;
+    ctx.fillStyle=grund; ctx.fill();
+    ctx.globalAlpha=1;
+    if(g[f.i]>0.01){
+      ctx.fillStyle=`rgba(232,201,106,${(g[f.i]*0.30).toFixed(3)})`; ctx.fill();
+    }
+    ctx.strokeStyle=`rgba(200,168,75,${(0.10+f.z*0.16).toFixed(3)})`;
+    ctx.lineWidth=1; ctx.stroke();
+  }
+
+  ctx.beginPath(); ctx.arc(CX,CY,r,0,Math.PI*2);
+  ctx.strokeStyle="rgba(200,168,75,.5)"; ctx.lineWidth=1.6; ctx.stroke();
+
+  // Schalen weiter innen
+  for(let s=schale+1;s<SCHALEN.length;s++) gitterKugel(RAD*SCHALEN[s].r,.13);
+
+  // Kern: der Leib als Ursprung aller Schemata
+  ctx.beginPath(); ctx.arc(CX,CY,RAD*0.15,0,Math.PI*2);
+  ctx.fillStyle="rgba(232,201,106,.12)"; ctx.fill();
+  ctx.strokeStyle="rgba(200,168,75,.4)"; ctx.lineWidth=1.1; ctx.stroke();
+
+  // Domänennamen auf den zugewandten Spalten
+  ctx.font="600 17px Cinzel, Georgia, serif"; ctx.textAlign="center"; ctx.textBaseline="middle";
+  for(let i=0;i<8;i++){
+    const p=drehen(aufKugel(i*45,0));
+    if(p.z<0.32) continue;
+    const q=auf(p,r*1.01);
+    const name=DOMAINS[i].names[currentLang.code]||DOMAINS[i].id;
+    ctx.fillStyle=`rgba(240,232,208,${(p.z*0.92).toFixed(2)})`;
+    ctx.fillText(name,q.sx,q.sy);
+  }
+
+  // Bühler-Pole
+  const vorn=polVorn();
+  POLE.forEach((pol,k)=>{
+    const p=drehen(aufKugel(pol.lon,pol.lat));
+    if(p.z<=0) return;
+    const q=auf(p,r*1.07);
+    const an=k===vorn;
+    ctx.beginPath(); ctx.arc(q.sx,q.sy,an?9:5,0,Math.PI*2);
+    ctx.fillStyle=an?"#e8c96a":"rgba(200,168,75,.38)"; ctx.fill();
+    ctx.font=`${an?"600 15px":"400 13px"} Cinzel, Georgia, serif`;
+    ctx.fillStyle=an?"#e8c96a":`rgba(200,168,75,${(p.z*.45).toFixed(2)})`;
+    ctx.fillText(pol.kurz,q.sx,q.sy-21);
+  });
+
+  document.getElementById("vornWort").textContent=POLE[vorn].id;
+  document.getElementById("vornErkl").textContent=POLE[vorn].erkl;
+}
+
+// ── Bedienung der Kugel ───────────────────────────────────────────────────────
+let ziehe=false, lx=0, ly=0;
+cv.addEventListener("pointerdown",e=>{
+  ziehe=true; selbstDreht=false; lx=e.clientX; ly=e.clientY; cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener("pointermove",e=>{
+  if(!ziehe) return;
+  yaw+=(e.clientX-lx)*0.009;
+  pitch=Math.max(-1.2,Math.min(1.2,pitch+(e.clientY-ly)*0.007));
+  lx=e.clientX; ly=e.clientY; zeichne();
+});
+["pointerup","pointercancel"].forEach(t=>cv.addEventListener(t,()=>{ziehe=false;}));
+cv.addEventListener("keydown",e=>{
+  const s={ArrowLeft:[-.17,0],ArrowRight:[.17,0],ArrowUp:[0,-.13],ArrowDown:[0,.13]}[e.key];
+  if(!s) return;
+  e.preventDefault(); selbstDreht=false;
+  yaw+=s[0]; pitch=Math.max(-1.2,Math.min(1.2,pitch+s[1])); zeichne();
+});
+
+const ruhig=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let letzte=0;
+function schweben(t){
+  if(selbstDreht && !ruhig && DOMAINS.length){
+    if(letzte) { yaw += (t-letzte)*0.00007; zeichne(); }
+    letzte=t;
+  } else letzte=t;
+  requestAnimationFrame(schweben);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ANZEIGE
+// ══════════════════════════════════════════════════════════════════════════════
+function richteAus(prof){
+  aktivesProfil=prof;
+  const idx=hauptdomaene(prof);
+  aktiveDomaene=idx;
+  const dom=DOMAINS[idx], g=gewichte(prof);
+
+  // die Hauptdomäne nach vorn drehen, Neigung beibehalten
+  if(!ziehe){ selbstDreht=false; yaw=-rad(idx*45); }
+
+  const tags=dom.schemata.map(s=>`<span class="tag">${s}</span>`).join('');
+  const dname=dom.names[currentLang.code]||dom.id;
+  const balken=DOMAINS.map((d,i)=>`
+    <div class="bar">
+      <span class="bar-n">${d.names[currentLang.code]||d.id}</span>
+      <span class="bar-t"><span class="bar-f" style="background:${d.highlight};width:${Math.round(g[i]*100)}%"></span></span>
+      <span class="bar-v">${g[i]?Math.round(g[i]*100)+'%':'–'}</span>
+    </div>`).join('');
+  document.getElementById('domBox').innerHTML=`
+    <div class="dom-name fi">${dname}${prof.length>1?` <span class="anteil">${Math.round(g[idx]*100)}%</span>`:''}</div>
+    <div class="dom-dir fi">↗ ${dom.dir} · ${dom.angle}°</div>
+    <div class="tags fi">${tags}</div>
+    <div class="dom-desc fi">${dom.desc}</div>
+    <div class="bars fi">${balken}</div>`;
+  zeichne();
+  return dom;
+}
+
+function buildLangButtons(){
+  const row=document.getElementById('langRow');
+  row.innerHTML='';
+  LANGS.forEach(l=>{
+    const b=document.createElement('button');
+    b.className='lbtn'; b.type='button';
+    b.textContent=`${l.flag} ${l.name}`;
+    b.setAttribute('aria-pressed',l.code===currentLang.code?'true':'false');
+    b.onclick=()=>switchLang(l);
+    row.appendChild(b);
+  });
+}
+function switchLang(l){
+  currentLang=l;
+  buildLangButtons();
+  const pin=document.getElementById('pin');
+  pin.placeholder=l.ph; pin.dir=l.rtl?'rtl':'ltr';
+  document.getElementById('promptLabel').textContent=l.pl;
+  document.getElementById('responseLabel').textContent=l.rl;
+  document.getElementById('rbox').dir=l.rtl?'rtl':'ltr';
+  if(aktivesProfil) richteAus(aktivesProfil); else zeichne();
+}
+
+function buildSchalen(){
+  const row=document.getElementById('schalenRow');
+  row.innerHTML='';
+  SCHALEN.forEach((s,i)=>{
+    const b=document.createElement('button');
+    b.className='lbtn'; b.type='button'; b.textContent=s.id;
+    b.title=s.erkl;
+    b.setAttribute('aria-pressed',i===schale?'true':'false');
+    b.onclick=()=>{
+      schale=i;
+      [...row.children].forEach((c,k)=>c.setAttribute('aria-pressed',k===i?'true':'false'));
+      zeichne();
+    };
+    row.appendChild(b);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SENDEN
+// ══════════════════════════════════════════════════════════════════════════════
+async function send(){
+  const raw=document.getElementById('pin').value.trim();
+  if(!raw) return;
+  const word=normalize(raw);
+  const rbox=document.getElementById('rbox');
+  rbox.dir=currentLang.rtl?'rtl':'ltr';
+  rbox.innerHTML='<span class="loading">…</span>';
+
+  if(!DOMAINS.length){
+    zeigeFehler(rbox,new Error("Daten noch nicht geladen."));
+    return;
+  }
+
+  let prof=profil(LEX[word]);
+  let treffer='';
+
+  if(!prof){
+    const stems=[
+      word.replace(/en$/,''),word.replace(/ung$/,''),word.replace(/heit$/,''),
+      word.replace(/keit$/,''),word.replace(/schaft$/,''),word.replace(/lich$/,''),
+      word.replace(/ing$/,''),word.replace(/tion$/,''),word.replace(/ness$/,''),
+      word.replace(/idad$/,''),word.replace(/ité$/,''),word.replace(/ità$/,''),
+      word.replace(/ade$/,''),word.replace(/agem$/,''),word.replace(/er$/,''),
+      word.replace(/es$/,''),word.replace(/te$/,''),word.replace(/ed$/,''),
+      word.replace(/s$/,''),
+    ];
+    for(const s of stems){
+      if(LEX[s]!==undefined){prof=profil(LEX[s]);treffer=` (→${s})`;break;}
+    }
+  } else treffer=' ✦';
+
+  if(prof){
+    const dom=richteAus(prof);
+    document.getElementById('domBox').querySelector('.dom-dir')
+      .insertAdjacentHTML('afterend',`<div class="match-info fi">Lexikon${treffer}</div>`);
+    await deute(dom,raw,rbox);
+  } else {
+    document.getElementById('domBox').innerHTML='<div class="placeholder fi">KI klassifiziert…</div>';
+    try{
+      const kd=await vermittler('/klassifiziere',{instrument:'sprachkugel',wort:raw});
+      const fi=DOMAINS.findIndex(d=>d.id===kd.domaene);
+      const dom=richteAus([[fi>=0?fi:0,1]]);
+      document.getElementById('domBox').querySelector('.dom-dir')
+        .insertAdjacentHTML('afterend',`<div class="match-info fi">KI-Klassifikation</div>`);
+      await deute(dom,raw,rbox);
+    }catch(e){
+      document.getElementById('domBox').innerHTML='<div class="placeholder fi">Nicht ausgerichtet.</div>';
+      zeigeFehler(rbox,e);
+    }
+  }
+}
+
+async function deute(dom,wort,rbox){
+  try{
+    const d=await vermittler('/deute',{
+      instrument:'sprachkugel',
+      wort:wort, domaene:dom.id, sprache:currentLang.code
+    });
+    rbox.textContent=d.text||'–';
+  }catch(e){zeigeFehler(rbox,e);}
+}
+
+document.getElementById('pin').addEventListener('keydown',e=>{if(e.key==='Enter')send();});
+document.getElementById('sendBtn').addEventListener('click',send);
+
+buildLangButtons();
+buildSchalen();
+ladeDaten().then(()=>{
+  zeichne();
+  requestAnimationFrame(schweben);
+}).catch(e=>{
+  document.getElementById('domBox').innerHTML='<div class="placeholder fi">Daten nicht ladbar.</div>';
+  zeigeFehler(document.getElementById('rbox'),e);
+});
+</script>
+</body>
+</html>

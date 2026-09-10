@@ -68,6 +68,9 @@ const INSTRUMENTE = {
   astrolabium: {
     stimme: "Du bist ein lebendes Astrolabium der kognitiven Linguistik – ein Kommunikationsinstrument, das verkörperte Erfahrung in Sprache verwandelt.",
   },
+  sprachkugel: {
+    stimme: "Du bist die Sprachkugel – ein Instrument der kognitiven Linguistik, das ein Wort als Lage im Raum der Bildschemata liest.",
+  },
 };
 
 const SPRACHEN = {
